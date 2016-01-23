@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Chat Example</title>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+
+    var conn;
+    var msg = $("#msg");
+    var log = $("#log");
+
+    // function appendLog(msg) {
+    //     var d = log[0]
+    //     var doScroll = d.scrollTop == d.scrollHeight - d.clientHeight;
+    //     msg.html(log)
+    //     if (doScroll) {
+    //         d.scrollTop = d.scrollHeight - d.clientHeight;
+    //     }
+    // }
+
+    function setLog(msg) {
+        var d = log[0]
+        var doScroll = d.scrollTop == d.scrollHeight - d.clientHeight;
+        log.html($("<pre/>").text(msg));
+        if (doScroll) {
+            d.scrollTop = d.scrollHeight - d.clientHeight;
+        }
+    }
+
+    $("#form").submit(function() {
+        if (!conn) {
+            return false;
+        }
+        if (!msg.val()) {
+            return false;
+        }
+
+        conn.send(msg.val());
+
+        console.log("sent message!");
+
+        msg.val("");
+        return false
+    });
+
+    var joinGame = function(gameID) {
+      if (window["WebSocket"]) {
+          conn = new WebSocket("ws://{{$}}/" + gameID + "/ws");
+          conn.onclose = function(evt) {
+              console.log("Connection closed");
+          }
+          conn.onmessage = function(evt) {
+            var state = JSON.parse(evt.data);
+            setLog(JSON.stringify(state, null, 2));
+          }
+          conn.onopen = function() {
+            console.log("Connection opened to game " + gameID);
+
+            window.onkeyup = function(e) {
+              var key = e.keyCode ? e.keyCode : e.which;
+
+              switch (key) {
+                case 65: // left
+                  conn.send("left");
+                  break;
+                case 68: // right
+                  conn.send("right");
+                  break;
+                case 87: // up
+                  conn.send("up");
+                  break;
+                case 83: // down
+                  conn.send("down");
+                  break;
+              }
+            }
+          }
+      } else {
+          console.log("Your browser does not support WebSockets");
+      }
+    };
+
+    if (window.location.hash && window.location.hash.length > 0) {
+      var gameID = window.location.hash.substring(1);
+
+      joinGame(gameID);
+    } else {
+      $.ajax({
+        method: "POST",
+        url: "/",
+        dataType: "json"
+      }).done(function(data) {
+
+        var gameID = data.id;
+
+        window.location.hash = "#" + gameID;
+
+        joinGame(gameID);
+
+      });
+    }
+
+    });
+</script>
+<style type="text/css">
+html {
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: gray;
+}
+
+#log {
+    background: white;
+    margin: 0;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    position: absolute;
+    top: 0.5em;
+    left: 0.5em;
+    right: 0.5em;
+    bottom: 3em;
+    overflow: auto;
+}
+
+#form {
+    padding: 0 0.5em 0 0.5em;
+    margin: 0;
+    position: absolute;
+    bottom: 1em;
+    left: 0px;
+    width: 100%;
+    overflow: hidden;
+}
+
+</style>
+</head>
+<body>
+<div id="log"></div>
+<form id="form">
+    <input type="submit" value="Send" />
+    <input type="text" id="msg" size="64"/>
+</form>
+</body>
+</html>

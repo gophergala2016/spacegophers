@@ -1,0 +1,46 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "github.com/apex/log",
+			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
+			"revisionTime": "2016-01-17T15:35:35-08:00"
+		},
+		{
+			"path": "github.com/apex/log/handlers/json",
+			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
+			"revisionTime": "2016-01-17T15:35:35-08:00"
+		},
+		{
+			"path": "github.com/apex/log/handlers/multi",
+			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
+			"revisionTime": "2016-01-17T15:35:35-08:00"
+		},
+		{
+			"path": "github.com/apex/log/handlers/text",
+			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
+			"revisionTime": "2016-01-17T15:35:35-08:00"
+		},
+		{
+			"path": "github.com/gorilla/context",
+			"revision": "215affda49addc4c8ef7e2534915df2c8c35c6cd",
+			"revisionTime": "2014-12-17T08:02:51-08:00"
+		},
+		{
+			"path": "github.com/gorilla/mux",
+			"revision": "26a6070f849969ba72b72256e9f14cf519751690",
+			"revisionTime": "2015-12-31T08:19:08-08:00"
+		},
+		{
+			"path": "github.com/gorilla/websocket",
+			"revision": "5434f8b69b7f4f4ef0120e04c046cd6ce54ef0dd",
+			"revisionTime": "2016-01-19T18:24:46-08:00"
+		},
+		{
+			"path": "github.com/xtgo/uuid",
+			"revision": "a0b114877d4caeffbd7f87e3757c17fce570fea7",
+			"revisionTime": "2014-08-03T20:12:11-06:00"
+		}
+	]
+}

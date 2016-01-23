@@ -5,8 +5,6 @@ import (
 	"os"
 
 	"github.com/apex/log"
-	"github.com/apex/log/handlers/json"
-	"github.com/apex/log/handlers/multi"
 	"github.com/apex/log/handlers/text"
 )
 
@@ -16,14 +14,7 @@ var verbose = flag.Bool("v", false, "enable verbose logging")
 func main() {
 	flag.Parse()
 
-	f, err := os.Create("log/spacegophers.json")
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	defer f.Close()
-
-	log.SetHandler(multi.New(text.New(os.Stderr), json.New(f)))
-	// log.SetHandler(json.New(os.Stderr))
+	log.SetHandler(text.New(os.Stderr))
 
 	if *verbose {
 		log.SetLevel(log.DebugLevel)

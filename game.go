@@ -89,7 +89,9 @@ func (g *Game) Run() {
 				gst = append(gst, user.Gopher)
 			}
 
-			pl, err := json.Marshal(gst)
+			pl, err := json.Marshal(map[string]interface{}{
+				"gophers": gst,
+			})
 			if err != nil {
 				g.Log.Error(err.Error())
 			}

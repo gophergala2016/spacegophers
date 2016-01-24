@@ -2,12 +2,24 @@ import { BaseGopher, UserGopher } from './Gophers';
 
 let createjs = window.createjs;
 
-export class Stage extends Object {
+export class Game extends Object {
   constructor() {
     super();
     this.count = 0;
     this.stage = new createjs.Stage('spaceGophers');
     this.gophers = [];
+  }
+
+  setUserId(userID) {
+    this._userID = userID;
+  }
+
+  getUserId() {
+    return this._userID;
+  }
+
+  setGophers(gophers) {
+    this._gophers = gophers;
   }
 
   tick(event) {
@@ -33,25 +45,27 @@ export class Stage extends Object {
     this.stage.addChild(gopher);
   }
 
-  CreateUser(id) {
-    let gopher = new UserGopher({
-      color: '#ff0',
-      i: id,
+  CreateUser(img) {
+    return
+  }
+
+  InitStage(Manager) {
+    let userGopher = new UserGopher({
+      img: Manager.userImg,
+      i: this._userID,
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
       radius: 15
     });
 
-    this.storeGopher(gopher);
-    this.addGopherToStage(gopher);
-  }
-
-  InitStage() {
     createjs.Ticker.setFPS(5);
     createjs.Ticker.addEventListener('tick', this.stage);
     createjs.Ticker.addEventListener('tick', (e) => {
       this.tick(e);
     });
+
+    this.storeGopher(userGopher);
+    this.addGopherToStage(userGopher);
   }
 
   UpdateStage(GameState) {
@@ -88,10 +102,10 @@ export class Stage extends Object {
           x: GameState._gophers[s].x,
           y: GameState._gophers[s].y,
           radius: 15
-        });
+        }, this.addGopherToStage);
 
         this.storeGopher(gopher);
-        this.addGopherToStage(gopher);
+        // this.addGopherToStage(gopher);
       }
     };
     if (this.count < 10) {

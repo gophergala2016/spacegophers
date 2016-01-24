@@ -1,9 +1,10 @@
-import { Stage } from './Stage';
-import { State } from './State';
+import { Game } from './Game';
+import { AssetManager } from './AssetManager';
 
 let $ = window.jQuery;
-let GameState = new State();
-let GameStage = new Stage();
+// let GameState = new State();
+let SpaceGophers = new Game();
+let Manager = new AssetManager(SpaceGophers.stage, SpaceGophers.stage.canvas.width, SpaceGophers.stage.canvas.height);
 let count = 0;
 
 export function WSClose(e) {
@@ -16,21 +17,25 @@ export function WSMessage(e) {
   if (data.type === 'init') {
     // Store the user's ID so we know which
     // Gopher belongs to this socket
-    GameState.setUserId(data.i);
-    GameStage.CreateUser(data.i);
+    SpaceGophers.setUserId(data.i);
   }
 
   if (data.type === 'state') {
-    GameState.setGophers(data.gophers);
-    if (count < 20) {
-      count++;
-      GameStage.UpdateStage(GameState);
-    }
+    // GameState.setGophers(data.gophers);
+    // if (count < 20) {
+    //   count++;
+    //   GameStage.UpdateStage(GameState);
+    // }
   }
 }
 
 export function WSOpen(e) {
   console.log('Connection opened to game: ');
+  Manager.setDownloadCompleted(function() {
+    SpaceGophers.InitStage(Manager);
+  });
+
+  Manager.StartDownload();
 }
 
 function joinGame(gameID) {
@@ -39,8 +44,6 @@ function joinGame(gameID) {
   conn.onclose = WSClose;
   conn.onmessage = WSMessage;
   conn.onopen = WSOpen;
-
-  GameStage.InitStage();
 }
 
 

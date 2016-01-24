@@ -1,27 +1,46 @@
 import key from 'keyboardjs';
 
-let Shape = window.createjs.Shape;
+let Sprite = window.createjs.Sprite;
+let SpriteSheet = window.createjs.SpriteSheet;
+// let Bitmap = window.createjs.Bitmap;
 
-export class BaseGopher extends Shape {
+export class BaseGopher extends Sprite {
   constructor(options) {
+    // console.log('gopher constructor', options);
     super();
-    let g = new Shape();
+    let g = new Sprite();
+    console.log('sprite: ', g);
 
-    // Custom properties and methods
-    g._i = options.i;
-    g._name = options.name;
-    g._color = options.color;
-    g.update = this.update;
-    g.getName = this.getName;
-    g.convertDegrees = this.convertDegrees;
+    g.spriteSheet = new SpriteSheet({
+      images: [options.img],
+      frames: {
+        width: 50,
+        height: 50,
+        regX: 25,
+        regY: 25
+      }
+    })
 
-    // EaselJS properties/methods
-    g.graphics
-      .beginFill(options.color)
-      .drawCircle(0, 0, 20);
     g.x = options.x;
     g.y = options.y;
-    g.pixelsPerSecond = 100;
+    g._i = options.i;
+
+    // let gImg = new Image();
+    // let g = new Shape();
+
+    // // Custom properties and methods
+    // g._name = options.name;
+    // g._color = options.color;
+    // g.update = this.update;
+    // g.getName = this.getName;
+    // g.convertDegrees = this.convertDegrees;
+
+    // // EaselJS properties/methods
+    // g.graphics
+    //   .beginFill(options.color)
+    //   .drawCircle(0, 0, 20);
+    // g.pixelsPerSecond = 100;
+
     return g;
   }
 

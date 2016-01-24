@@ -11,12 +11,12 @@ export class BaseGopher extends Sprite {
     g.spriteSheet = new SpriteSheet({
       images: [options.img],
       frames: {
-        width: 50,
-        height: 50,
-        regX: 25,
-        regY: 25
+        width: 100,
+        height: 100,
+        regX: 50,
+        regY: 50
       }
-    })
+    });
 
     g.x = options.x;
     g.y = options.y;
@@ -27,75 +27,48 @@ export class BaseGopher extends Sprite {
   }
 
   update(obj) {
-    this.x = obj.x;
-    this.y = obj.y;
-    // console.log('gopher has new position of: ', this.x, this.y);
+    if (obj.x !== this.x) {
+      this.x = obj.x;
+    };
+
+    if (obj.y !== this.y) {
+      this.y = obj.y;
+    };
+  }
+}
+
+export class EnemyGopher extends BaseGopher {
+  constructor(options, sendCommand) {
+    return super(options);
   }
 }
 
 export class UserGopher extends BaseGopher {
   constructor(options, sendCommand) {
-    let g = super(options, sendCommand);
+    let g = super(options);
 
     g.sendCommand = (cmd) => {
       sendCommand(cmd);
-    }
+    };
 
     key.bind(['w', 'up'], (e) => {
+      e.preventDefault();
       g.sendCommand('up');
     });
 
-  //   keyboardJS.bind(['a', 'left'], self.sendCommand('left'));
-  //   keyboardJS.bind(['d', 'right'], self.sendCommand('right'));
-  //   keyboardJS.bind(['w', 'up'], self.sendCommand('up'));
-  //   keyboardJS.bind(['s', 'down'], self.sendCommand('down'));
-  //   keyboardJS.bind('space', self.sendCommand('fire'));
-  // };
+    key.bind(['s', 'down'], (e) => {
+      e.preventDefault();
+      g.sendCommand('down');
+    });
 
-  // Game.prototype.sendCommand = function(command) {
-  //   var self = this;
+    key.bind(['d', 'right'], (e) => {
+      g.sendCommand('right');
+    });
 
-  //   return function() {
-  //     console.log("Sending: " + command);
-  //     self.ws.send(command);
-  //   };
-  // };
-
-    // key.bind(['s', 'down'], (e) => {
-    //   console.log('backward movement');
-    //   // this.moveDown();
-    // }, (e) => {
-    //   console.log('stop backward movement');
-    // });
-
-    // key.bind(['a', 'left'], (e) => {
-    //   console.log('left movement');
-    //   // this.moveLeft();
-    // }, (e) => {
-    //   console.log('stop left movement');
-    // });
-
-    // key.bind(['d', 'right'], (e) => {
-    //   console.log('right movement');
-    //   // this.moveRight();
-    // }, (e) => {
-    //   console.log('stop right movement');
-    // });
+    key.bind(['a', 'left'], (e) => {
+      g.sendCommand('left');
+    });
 
     return g;
-  }
-
-
-  moveUp() {
-    this.sendCommand('up');
-  }
-
-  moveDown() {
-  }
-
-  moveLeft() {
-  }
-
-  moveRight() {
   }
 }

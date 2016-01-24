@@ -55,75 +55,11 @@ export class AssetManager {
   }
 
   tick(event) {
-    this.downloadProgress.text = 'Downloading ' + Math.round((this.numElementsLoaded / this.NUM_ELEMENTS_TO_DOWNLOAD) * 100) + ' %';
+    let text = Math.round((this.numElementsLoaded / this.NUM_ELEMENTS_TO_DOWNLOAD) * 100);
+
+    this.downloadProgress.text = 'Downloading ' + text + ' %';
 
     // update the stage:
     this.stage.update();
   }
 }
-
-// function ContentManager(stage, width, height) {
-//     // Method called once all downloads are completed
-//     var onDownloadCompleted;
-
-//     var NUM_ELEMENTS_TO_DOWNLOAD = 10;
-//     var numElementsLoaded = 0;
-
-//     var downloadProgress;
-
-//     // setting the download completed callback
-//     this.setDownloadCompleted = function(cb) {
-//         onDownloadCompleted = cb;
-//     };
-
-//     this.imgBackground = new Image();
-//     this.imgPlayer = new Image();
-
-//     // public method to launch the download process
-//     this.StartDownload = function () {
-//         // add a text object to output the current donwload progression
-//         downloadProgress = new createjs.Text("-- %", "14px Arial", "#ff7700");
-//         downloadProgress.x = (width / 2) - 50;
-//         downloadProgress.y = height / 2;
-//         stage.addChild(downloadProgress);
-//         stage.update();
-
-//         setDownloadParameters(this.imgBackground, 'img/background.jpg');
-//         setDownloadParameters(this.imgPlayer, 'img/Bman.png');
-
-//         createjs.Ticker.addEventListener("tick", this.tick);
-//     };
-
-//     function setDownloadParameters(assetElement, url) {
-//         assetElement.src = url;
-//         assetElement.onload = handleElementLoad;
-//         assetElement.onerror = handleElementError;
-//     };
-
-//     // our global handler
-//     function handleElementLoad(e) {
-//         numElementsLoaded++;
-
-//         // If all elements have been downloaded
-//         if (numElementsLoaded === NUM_ELEMENTS_TO_DOWNLOAD) {
-//             stage.removeChild(downloadProgress);
-//             Ticker.removeAllListeners();
-//             numElementsLoaded = 0;
-//             // we're calling back the method set by SetDownloadCompleted
-//             ondownloadcompleted();
-//         }
-//     }
-
-//     //called if there is an error loading the image (usually due to a 404)
-//     function handleElementError(e) {
-//         console.log("Error Loading Asset : " + e.target.src);
-//     }
-
-//     // Update method which simply shows the current % of download
-//     this.tick = function() {
-//         downloadProgress.text = "Downloading " + Math.round((numElementsLoaded / NUM_ELEMENTS_TO_DOWNLOAD) * 100) + " %";
-
-//         // update the stage:
-//         stage.update();
-//     };
-// }

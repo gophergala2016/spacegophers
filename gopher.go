@@ -11,7 +11,7 @@ const (
 	halfGopherSize = gopherSize / 2
 
 	// timestep is the time step for a simulation event
-	timestep     = 15
+	timestep     = float64(DefaultPhysicsLoopInterval) / float64(time.Millisecond)
 	halfTimestep = timestep / 2.0
 
 	// thrustAcceleration is a unit of px/s^2

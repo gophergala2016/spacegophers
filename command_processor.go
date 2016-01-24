@@ -9,7 +9,7 @@ import (
 const (
 	// DefaultPhysicsLoopInterval is the default interval for which physics
 	// computations will occur.
-	DefaultPhysicsLoopInterval = time.Millisecond * 15
+	DefaultPhysicsLoopInterval = DefaultStateUpdateLoopInterval / 10.0
 
 	// DefaultCommandSizeBuffer is the default size of the buffer which holds
 	// commands.

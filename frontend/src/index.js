@@ -29,6 +29,9 @@ function WSOpen(e) {
   // console.log('Connection opened to game: ');
   Manager.setDownloadCompleted(function () {
     initialized = true;
+    window.onkeydown = function(e) {
+      return !(e.keyCode == 32);
+    };
     SpaceGophers.InitStage(Manager, conn);
   });
 

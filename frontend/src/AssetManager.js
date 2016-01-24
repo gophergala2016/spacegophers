@@ -4,6 +4,7 @@ export class AssetManager {
   constructor(stage, width, height) {
     this.enemyImg = new Image();
     this.userImg = new Image();
+    this.shot = new Image();
     this.downloadProgress = {};
     this.onDownloadCompleted = null;
     this.stage = stage;
@@ -25,6 +26,7 @@ export class AssetManager {
     this.stage.update();
     this.setDownloadParameters(this.enemyImg, '/static/enemygopher.png');
     this.setDownloadParameters(this.userImg, '/static/usergopher.png');
+    this.setDownloadParameters(this.shot, '/static/shot.png');
 
     createjs.Ticker.addEventListener('tick', (e) => {
       this.tick(e);

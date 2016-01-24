@@ -21,6 +21,7 @@ export class BaseGopher extends Sprite {
     g.x = options.x;
     g.y = options.y;
     g._i = options.i;
+    g._a = options.a;
     g.update = this.update;
 
     return g;
@@ -34,6 +35,10 @@ export class BaseGopher extends Sprite {
     if (obj.y !== this.y) {
       this.y = obj.y;
     };
+
+    if (obj.a !== this.a) {
+      this.rotation = obj.a * (180/Math.PI);
+    }
   }
 }
 
@@ -48,6 +53,7 @@ export class UserGopher extends BaseGopher {
     let g = super(options);
 
     g.sendCommand = (cmd) => {
+      console.log('test', this.rotation);
       sendCommand(cmd);
     };
 
@@ -62,11 +68,18 @@ export class UserGopher extends BaseGopher {
     });
 
     key.bind(['d', 'right'], (e) => {
+      e.preventDefault();
       g.sendCommand('right');
     });
 
     key.bind(['a', 'left'], (e) => {
+      e.preventDefault();
       g.sendCommand('left');
+    });
+
+    key.bind('spacebar', (e) => {
+      g.sendCommand('fire');
+      return false;
     });
 
     return g;

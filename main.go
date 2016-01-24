@@ -17,9 +17,6 @@ const (
 
 	boardSize = 300
 
-	// MaxPxPerItterationSquared caps the maximum value of the velocity for an entity.
-	MaxPxPerItterationSquared = 0.09
-
 	// the static file to load
 	tpl = "index.html"
 )

@@ -20,6 +20,7 @@ $(document).ready(function() {
     this.id = deets.i;
 
     this.shape = new createjs.Sprite();
+    this.game = game;
 
     this.image = isPlayer ? game.loader.getResult("usergopher") : game.loader.getResult("enemygopher");
 
@@ -27,15 +28,17 @@ $(document).ready(function() {
       framerate: 1,
       images: [this.image],
       frames: {
-        count: 4,
+        count: 13,
         width: 50,
         height: 50,
         regX: 25,
         regY: 25
       },
       animations: {
-        static: [0, 0, false],
-        thrust: [5, 9, "static"]
+        static: 0,
+        death: [1, 4],
+        thrust: [5, 8, "static", .25],
+        reverse: [9, 12, "static", .25]
       }
     });
 
@@ -60,8 +63,11 @@ $(document).ready(function() {
     if (deets.s) {
       // it is alive!
       this.shape.opacity = 1;
-    } else {
       // it is dead..
+      if (this.game.commands.up == true) { this.shape.gotoAndPlay("thrust"); }
+      if (this.game.commands.down == true) { console.log('reverse'); this.shape.gotoAndPlay("reverse"); }
+    } else {
+      this.shape.gotoAndPlay("death");
       this.shape.opacity = 0.3;
     }
   };
@@ -301,6 +307,10 @@ $(document).ready(function() {
           break;
       }
     };
+  };
+
+  Game.prototype.getCommands = function() {
+    return self.commands;
   };
 
 

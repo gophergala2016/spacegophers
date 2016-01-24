@@ -24,14 +24,22 @@ $(document).ready(function() {
     this.image = isPlayer ? game.loader.getResult("usergopher") : game.loader.getResult("enemygopher");
 
     this.shape.spriteSheet = new createjs.SpriteSheet({
+      framerate: 1,
       images: [this.image],
       frames: {
+        count: 4,
         width: 50,
         height: 50,
         regX: 25,
         regY: 25
+      },
+      animations: {
+        static: [0, 0, false],
+        thrust: [5, 9, "static"]
       }
     });
+
+    this.shape.gotoAndStop("static");
 
     this.update(deets);
 

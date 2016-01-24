@@ -65,7 +65,7 @@ func (g *Game) Run() {
 
 			initPl := map[string]string{
 				"type": "init",
-				"id":   user.ID,
+				"i":    user.ID,
 			}
 
 			pl, err := json.Marshal(initPl)

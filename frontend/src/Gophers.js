@@ -11,10 +11,10 @@ export class BaseGopher extends Sprite {
     g.spriteSheet = new SpriteSheet({
       images: [options.img],
       frames: {
-        width: 100,
-        height: 100,
-        regX: 50,
-        regY: 50
+        width: 50,
+        height: 50,
+        regX: 25,
+        regY: 25
       }
     });
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Chat Example</title>
+<title>Space Gophers</title>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 <script type="text/javascript">
     $(function() {
@@ -142,10 +142,13 @@ body {
 </style>
 </head>
 <body>
-<div id="log"></div>
-<form id="form">
-    <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64"/>
-</form>
+  <div id="log"></div>
+  <form id="form">
+      <input type="submit" value="Send" />
+      <input type="text" id="msg" size="64"/>
+  </form>
+  <canvas id="spaceGophers" width="800" height="800"></canvas>
+  <script src="static/easel.js"></script>
+  <script src="static/app.js"></script>
 </body>
 </html>

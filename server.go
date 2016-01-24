@@ -15,26 +15,26 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-var indexTempl = template.Must(template.ParseFiles("index.html"))
-
 // NewServer sets up a new server instance.
-func NewServer(ctx log.Interface, address string) Server {
+func NewServer(ctx log.Interface, address, templateFilename string) Server {
 	return Server{
 		Log: ctx.WithFields(log.Fields{
 			"module":  "Server",
 			"address": address,
 		}),
-		Address: address,
-		Hub:     NewGameHub(ctx),
+		IndexTemplate: template.Must(template.ParseFiles(templateFilename)),
+		Address:       address,
+		Hub:           NewGameHub(ctx),
 	}
 }
 
 // Server contains the entire application bundle and will start the necessary
 // components to serve up resources needed to execute the game.
 type Server struct {
-	Address string
-	Log     log.Interface
-	Hub     GameHub
+	Address       string
+	IndexTemplate *template.Template
+	Log           log.Interface
+	Hub           GameHub
 }
 
 // HandleWS handles the ws server upgrading.
@@ -87,7 +87,7 @@ func (s *Server) HandleHTTP(w http.ResponseWriter, r *http.Request) {
 
 			// serve the index file here..
 			w.Header().Set("Content-Type", "text/html")
-			indexTempl.Execute(w, r.Host)
+			s.IndexTemplate.Execute(w, r.Host)
 			return
 
 		} else if r.Method == "POST" {

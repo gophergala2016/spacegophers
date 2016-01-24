@@ -8,16 +8,6 @@
 			"revisionTime": "2016-01-17T15:35:35-08:00"
 		},
 		{
-			"path": "github.com/apex/log/handlers/json",
-			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
-			"revisionTime": "2016-01-17T15:35:35-08:00"
-		},
-		{
-			"path": "github.com/apex/log/handlers/multi",
-			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
-			"revisionTime": "2016-01-17T15:35:35-08:00"
-		},
-		{
 			"path": "github.com/apex/log/handlers/text",
 			"revision": "0df6dd6f3beb679ea47ec11b3aefc4edeed12f9f",
 			"revisionTime": "2016-01-17T15:35:35-08:00"

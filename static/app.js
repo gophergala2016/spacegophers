@@ -46,13 +46,6 @@
 
 	'use strict';
 	
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	exports.WSClose = WSClose;
-	exports.WSMessage = WSMessage;
-	exports.WSOpen = WSOpen;
-	
 	var _Game = __webpack_require__(1);
 	
 	var _AssetManager = __webpack_require__(8);
@@ -62,6 +55,7 @@
 	var SpaceGophers = new _Game.Game();
 	var Manager = new _AssetManager.AssetManager(SpaceGophers.stage, SpaceGophers.stage.canvas.width, SpaceGophers.stage.canvas.height);
 	var count = 0;
+	var conn = undefined;
 	
 	function WSClose(e) {
 	  console.log('Connection closed');
@@ -77,25 +71,25 @@
 	  }
 	
 	  if (data.type === 'state') {
-	    // GameState.setGophers(data.gophers);
+	    SpaceGophers.UpdateStage(data);
 	    // if (count < 20) {
 	    //   count++;
-	    //   GameStage.UpdateStage(GameState);
+	    //   SpaceGophers.UpdateStage(data);
 	    // }
 	  }
 	}
 	
 	function WSOpen(e) {
-	  console.log('Connection opened to game: ');
+	  // console.log('Connection opened to game: ');
 	  Manager.setDownloadCompleted(function () {
-	    SpaceGophers.InitStage(Manager);
+	    SpaceGophers.InitStage(Manager, conn);
 	  });
 	
 	  Manager.StartDownload();
 	}
 	
 	function joinGame(gameID) {
-	  var conn = new WebSocket(window.wspath + gameID + '/ws');
+	  conn = new WebSocket(window.wspath + gameID + '/ws');
 	
 	  conn.onclose = WSClose;
 	  conn.onmessage = WSMessage;
@@ -156,6 +150,8 @@
 	    _get(Object.getPrototypeOf(Game.prototype), 'constructor', this).call(this);
 	    this.count = 0;
 	    this.stage = new createjs.Stage('spaceGophers');
+	    this.manager = null;
+	    this.conn = null;
 	    this.gophers = [];
 	  }
 	
@@ -177,17 +173,6 @@
 	  }, {
 	    key: 'tick',
 	    value: function tick(event) {
-	      // if (this.count < 10) {
-	      //   this.count++;
-	      //   console.log('tick')
-	      // }
-	      // for (i = gophers.length - 1; i >= 0; i--) {
-	      //   gophers[i].update({
-	      //     x: 5,
-	      //     y: 7
-	      //   });
-	      // };
-	
 	      this.stage.update();
 	    }
 	  }, {
@@ -201,13 +186,19 @@
 	      this.stage.addChild(gopher);
 	    }
 	  }, {
+	    key: 'sendCommand',
+	    value: function sendCommand(cmd) {
+	      console.log('send: ', cmd, this.conn);
+	      this.conn.send(cmd);
+	    }
+	  }, {
 	    key: 'CreateUser',
 	    value: function CreateUser(img) {
 	      return;
 	    }
 	  }, {
 	    key: 'InitStage',
-	    value: function InitStage(Manager) {
+	    value: function InitStage(Manager, conn) {
 	      var _this = this;
 	
 	      var userGopher = new _Gophers.UserGopher({
@@ -216,7 +207,7 @@
 	        x: window.innerWidth / 2,
 	        y: window.innerHeight / 2,
 	        radius: 15
-	      });
+	      }, this.sendCommand.bind(this));
 	
 	      createjs.Ticker.setFPS(5);
 	      createjs.Ticker.addEventListener('tick', this.stage);
@@ -224,28 +215,30 @@
 	        _this.tick(e);
 	      });
 	
+	      this.manager = Manager;
+	      this.conn = conn;
 	      this.storeGopher(userGopher);
 	      this.addGopherToStage(userGopher);
 	    }
 	  }, {
-	    key: 'UpdateStage',
-	    value: function UpdateStage(GameState) {
-	      var s = undefined;
+	    key: 'updateGophers',
+	    value: function updateGophers(newGophers) {
+	      var g = undefined;
 	      var r = undefined;
-	      console.log('------------------ Updating Stage ---------------');
-	      console.log(this.gophers);
-	      for (s = GameState._gophers.length - 1; s >= 0; s--) {
+	      for (g = newGophers.length - 1; g >= 0; g--) {
 	        var exists = null;
 	
 	        // Only check for gopher existence if their ID doesn't match
 	        // our user's existing ID
-	        if (GameState._gophers[s].i !== GameState._userID) {
-	          console.log('dealing with a non-user gopher');
+	        if (newGophers[g].i !== this._userID) {
 	          for (r = this.gophers.length - 1; r >= 0; r--) {
 	            // Check if this gopher has already been added to the stage
-	            if (GameState._gophers[s].i === this.gophers[r]._i) {
-	              console.log('exists');
+	            if (newGophers[g].i === this.gophers[r]._i) {
 	              exists = true;
+	              this.gophers[r].update({
+	                x: newGophers[g].p.x,
+	                y: newGophers[g].p.y
+	              });
 	              break;
 	            } else {
 	              exists = false;
@@ -256,23 +249,25 @@
 	        // Doesn't exist, let's add it to the stage and push
 	        // into our Gophers array
 	        if (exists === false) {
-	          console.log('ghost, adding gopher to stage');
-	          var gopher = new _Gophers.BaseGopher({
-	            color: '#f00',
-	            i: GameState._gophers[s].i,
-	            x: GameState._gophers[s].x,
-	            y: GameState._gophers[s].y,
-	            radius: 15
-	          }, this.addGopherToStage);
+	          console.log('ghost, adding gopher to stage', newGophers[g]);
 	
-	          this.storeGopher(gopher);
-	          // this.addGopherToStage(gopher);
+	          var enemyGopher = new _Gophers.BaseGopher({
+	            img: this.manager.enemyImg,
+	            i: newGophers[g].i,
+	            x: newGophers[g].p.x,
+	            y: newGophers[g].p.y,
+	            radius: 15
+	          });
+	
+	          this.storeGopher(enemyGopher);
+	          this.addGopherToStage(enemyGopher);
 	        }
 	      };
-	      if (this.count < 10) {
-	        this.count++;
-	        console.log('tick', GameState);
-	      }
+	    }
+	  }, {
+	    key: 'UpdateStage',
+	    value: function UpdateStage(data) {
+	      this.updateGophers(data.gophers);
 	    }
 	  }]);
 	
@@ -307,7 +302,6 @@
 	
 	var Sprite = window.createjs.Sprite;
 	var SpriteSheet = window.createjs.SpriteSheet;
-	// let Bitmap = window.createjs.Bitmap;
 	
 	var BaseGopher = (function (_Sprite) {
 	  _inherits(BaseGopher, _Sprite);
@@ -315,10 +309,8 @@
 	  function BaseGopher(options) {
 	    _classCallCheck(this, BaseGopher);
 	
-	    // console.log('gopher constructor', options);
 	    _get(Object.getPrototypeOf(BaseGopher.prototype), 'constructor', this).call(this);
 	    var g = new Sprite();
-	    console.log('sprite: ', g);
 	
 	    g.spriteSheet = new SpriteSheet({
 	      images: [options.img],
@@ -333,42 +325,17 @@
 	    g.x = options.x;
 	    g.y = options.y;
 	    g._i = options.i;
-	
-	    // let gImg = new Image();
-	    // let g = new Shape();
-	
-	    // // Custom properties and methods
-	    // g._name = options.name;
-	    // g._color = options.color;
-	    // g.update = this.update;
-	    // g.getName = this.getName;
-	    // g.convertDegrees = this.convertDegrees;
-	
-	    // // EaselJS properties/methods
-	    // g.graphics
-	    //   .beginFill(options.color)
-	    //   .drawCircle(0, 0, 20);
-	    // g.pixelsPerSecond = 100;
+	    g.update = this.update;
 	
 	    return g;
 	  }
 	
 	  _createClass(BaseGopher, [{
-	    key: 'getName',
-	    value: function getName() {
-	      return this._name;
-	    }
-	  }, {
-	    key: 'convertDegrees',
-	    value: function convertDegrees(angle) {
-	      return Math.sin(angle) * 360;
-	    }
-	  }, {
 	    key: 'update',
 	    value: function update(obj) {
 	      this.x = obj.x;
 	      this.y = obj.y;
-	      console.log(this._name, ' has new position of: ', obj, this.x, this.y);
+	      // console.log('gopher has new position of: ', this.x, this.y);
 	    }
 	  }]);
 	
@@ -380,17 +347,34 @@
 	var UserGopher = (function (_BaseGopher) {
 	  _inherits(UserGopher, _BaseGopher);
 	
-	  function UserGopher(options) {
+	  function UserGopher(options, sendCommand) {
 	    _classCallCheck(this, UserGopher);
 	
-	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options);
+	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options, sendCommand);
 	
-	    // key.bind(['w', 'up'], (e) => {
-	    //   console.log('upward movement');
-	    //   this.moveUp();
-	    // }, (e) => {
-	    //   console.log('stop upward movement');
-	    // });
+	    g.sendCommand = function (cmd) {
+	      sendCommand(cmd);
+	    };
+	
+	    _keyboardjs2['default'].bind(['w', 'up'], function (e) {
+	      g.sendCommand('up');
+	    });
+	
+	    //   keyboardJS.bind(['a', 'left'], self.sendCommand('left'));
+	    //   keyboardJS.bind(['d', 'right'], self.sendCommand('right'));
+	    //   keyboardJS.bind(['w', 'up'], self.sendCommand('up'));
+	    //   keyboardJS.bind(['s', 'down'], self.sendCommand('down'));
+	    //   keyboardJS.bind('space', self.sendCommand('fire'));
+	    // };
+	
+	    // Game.prototype.sendCommand = function(command) {
+	    //   var self = this;
+	
+	    //   return function() {
+	    //     console.log("Sending: " + command);
+	    //     self.ws.send(command);
+	    //   };
+	    // };
 	
 	    // key.bind(['s', 'down'], (e) => {
 	    //   console.log('backward movement');
@@ -417,28 +401,19 @@
 	  }
 	
 	  _createClass(UserGopher, [{
-	    key: 'postAction',
-	    value: function postAction(action) {}
-	  }, {
 	    key: 'moveUp',
 	    value: function moveUp() {
-	      console.log('test: ', this.movementCalculation());
+	      this.sendCommand('up');
 	    }
 	  }, {
 	    key: 'moveDown',
-	    value: function moveDown() {
-	      this.y += this.movementCalculation();
-	    }
+	    value: function moveDown() {}
 	  }, {
 	    key: 'moveLeft',
-	    value: function moveLeft() {
-	      this.x -= this.movementCalculation();
-	    }
+	    value: function moveLeft() {}
 	  }, {
 	    key: 'moveRight',
-	    value: function moveRight() {
-	      this.x += this.movementCalculation();
-	    }
+	    value: function moveRight() {}
 	  }]);
 	
 	  return UserGopher;

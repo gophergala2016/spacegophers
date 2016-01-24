@@ -51,7 +51,7 @@ func (gs *GameState) Loop() {
 					}
 
 					if command.Message == "fire" {
-						shot := NewShot(command.User.Gopher)
+						shot := NewShot(command.User, command.User.Gopher)
 
 						// add the shot
 						gs.Shots[&shot] = true
@@ -93,6 +93,9 @@ func (gs *GameState) Loop() {
 
 							// kill the gopher
 							user.Gopher.Kill()
+
+							// award the points
+							shot.User.Gopher.Points += pointsPerKill
 
 							// kill the shot
 							delete(gs.Shots, shot)

@@ -19,7 +19,7 @@ const (
 // NewShot returns a new shot from a given Gopher. The location is set to the
 // middle of the gopher and is fired at the speed of the gopher plus the shot's
 // own speed in the direction of the angle of the Gopher.
-func NewShot(g Gopher) Shot {
+func NewShot(u *User, g Gopher) Shot {
 	posx := g.Position.X + halfGopherSize
 	posy := g.Position.Y + halfGopherSize
 
@@ -29,6 +29,7 @@ func NewShot(g Gopher) Shot {
 	return Shot{
 		ID:         uuid.NewRandom().String(),
 		Gopher:     g.UserID,
+		User:       u,
 		Entity:     NewEntity(thrustAcceleration, posx, posy, velx, vely, g.Angle),
 		Lifecycles: int64(defaultLifeCycles),
 	}
@@ -39,6 +40,7 @@ func NewShot(g Gopher) Shot {
 type Shot struct {
 	ID         string `json:"i"`
 	Gopher     string `json:"g"`
+	User       *User  `json:"-"`
 	Lifecycles int64  `json:"-"`
 	Entity
 }

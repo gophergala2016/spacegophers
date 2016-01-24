@@ -19,6 +19,8 @@ const (
 	deadTimeout = 5 * time.Second / DefaultPhysicsLoopInterval
 
 	boardSize = 5000
+
+	pointsPerKill = 100
 )
 
 // NewGopher creates a Gopher for a new player.
@@ -32,11 +34,20 @@ func NewGopher(userID string, pos Coordinates) Gopher {
 	}
 }
 
+// ByScore implements sort.Interface for []Gopher based on
+// the ID field.
+type ByScore []Gopher
+
+func (a ByScore) Len() int           { return len(a) }
+func (a ByScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByScore) Less(i, j int) bool { return a[i].Points < a[j].Points }
+
 // Gopher stores the players details.
 type Gopher struct {
 	UserID string `json:"i"`
 	Entity
 	Alive   bool   `json:"s"`
+	Points  uint64 `json:"p"`
 	DeadFor uint64 `json:"-"`
 }
 

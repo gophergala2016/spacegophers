@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/apex/log"
 	"github.com/xtgo/uuid"
@@ -99,6 +100,8 @@ func (g *Game) Run() {
 			for user := range state.Users {
 				gophers = append(gophers, user.Gopher)
 			}
+
+			sort.Sort(ByScore(gophers))
 
 			var shots = make([]Shot, 0, len(state.Shots))
 			for shot := range state.Shots {

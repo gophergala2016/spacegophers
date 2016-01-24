@@ -46,20 +46,80 @@
 
 	'use strict';
 	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	exports.WSClose = WSClose;
+	exports.WSMessage = WSMessage;
+	exports.WSOpen = WSOpen;
+	
 	var _Stage = __webpack_require__(1);
 	
-	var wspath = window.wspath;
-	var conn = undefined;
-	var gameID = undefined;
+	var _State = __webpack_require__(8);
 	
-	function joinGame(gameID) {}
+	var $ = window.jQuery;
+	var GameState = new _State.State();
+	var GameStage = new _Stage.Stage();
+	var count = 0;
+	
+	function WSClose(e) {
+	  console.log('Connection closed');
+	}
+	
+	function WSMessage(e) {
+	  // console.log(e.data);
+	  var data = JSON.parse(e.data);
+	  if (data.type === 'init') {
+	    // Store the user's ID so we know which
+	    // Gopher belongs to this socket
+	    GameState.setUserId(data.i);
+	    GameStage.CreateUser(data.i);
+	  }
+	
+	  if (data.type === 'state') {
+	    GameState.setGophers(data.gophers);
+	    if (count < 20) {
+	      count++;
+	      GameStage.UpdateStage(GameState);
+	    }
+	  }
+	}
+	
+	function WSOpen(e) {
+	  console.log('Connection opened to game: ');
+	}
+	
+	function joinGame(gameID) {
+	  var conn = new WebSocket(window.wspath + gameID + '/ws');
+	
+	  conn.onclose = WSClose;
+	  conn.onmessage = WSMessage;
+	  conn.onopen = WSOpen;
+	
+	  GameStage.InitStage();
+	}
 	
 	document.addEventListener('DOMContentLoaded', function () {
 	  if (window['WebSocket']) {
-	    console.log('woo');
-	  }
 	
-	  (0, _Stage.InitStage)();
+	    if (window.location.hash && window.location.hash.length > 0) {
+	      var gameID = window.location.hash.substring(1);
+	
+	      joinGame(gameID);
+	    } else {
+	
+	      $.ajax({
+	        method: 'POST',
+	        url: '/',
+	        dataType: 'json'
+	      }).done(function (data) {
+	        window.location.hash = '#' + data.id;
+	        joinGame(data.id);
+	      });
+	    }
+	  } else {
+	    console.log('Your browser does not support WebSockets');
+	  }
 	});
 
 /***/ },
@@ -71,91 +131,135 @@
 	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
-	exports.InitStage = InitStage;
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	var _Gophers = __webpack_require__(2);
 	
 	var createjs = window.createjs;
-	var stage = new createjs.Stage('spaceGophers');
-	var count = 0;
-	var userID = 'userID';
-	var gophers = [];
 	
-	var state = {
-	  projectiles: [{
-	    id: 'projectile1',
-	    x: 25,
-	    y: 50
-	  }],
-	  gophers: [{
-	    color: '#f00',
-	    id: 'gopher1',
-	    x: 300,
-	    y: 100
-	  }, {
-	    color: '#0081c9',
-	    id: 'gopher2',
-	    x: 50,
-	    y: 50
-	  }, {
-	    color: '#ff0',
-	    id: 'userID',
-	    x: 600,
-	    y: 600
-	  }]
-	};
+	var Stage = (function (_Object) {
+	  _inherits(Stage, _Object);
 	
-	function tick(event) {
-	  var i = undefined;
+	  function Stage() {
+	    _classCallCheck(this, Stage);
 	
-	  if (count < 10) {
-	    count++;
-	    console.log('-------');
-	
-	    for (i = gophers.length - 1; i >= 0; i--) {
-	      gophers[i].update({
-	        x: 5,
-	        y: 7
-	      });
-	    };
+	    _get(Object.getPrototypeOf(Stage.prototype), 'constructor', this).call(this);
+	    this.count = 0;
+	    this.stage = new createjs.Stage('spaceGophers');
+	    this.gophers = [];
 	  }
 	
-	  stage.update();
-	}
+	  _createClass(Stage, [{
+	    key: 'tick',
+	    value: function tick(event) {
+	      // if (this.count < 10) {
+	      //   this.count++;
+	      //   console.log('tick')
+	      // }
+	      // for (i = gophers.length - 1; i >= 0; i--) {
+	      //   gophers[i].update({
+	      //     x: 5,
+	      //     y: 7
+	      //   });
+	      // };
 	
-	function InitStage() {
-	  var gopher = undefined;
-	  var i = undefined;
-	
-	  for (i = state.gophers.length - 1; i >= 0; i--) {
-	    console.log('state: ', state.gophers[i].id);
-	
-	    if (state.gophers[i].id !== userID) {
-	      gopher = new _Gophers.BaseGopher({
-	        color: state.gophers[i].color,
-	        id: state.gophers[i].id,
-	        x: state.gophers[i].x,
-	        y: state.gophers[i].y,
-	        radius: state.gophers[i].radius
+	      this.stage.update();
+	    }
+	  }, {
+	    key: 'storeGopher',
+	    value: function storeGopher(gopher) {
+	      this.gophers.push(gopher);
+	    }
+	  }, {
+	    key: 'addGopherToStage',
+	    value: function addGopherToStage(gopher) {
+	      this.stage.addChild(gopher);
+	    }
+	  }, {
+	    key: 'CreateUser',
+	    value: function CreateUser(id) {
+	      var gopher = new _Gophers.UserGopher({
+	        color: '#ff0',
+	        i: id,
+	        x: window.innerWidth / 2,
+	        y: window.innerHeight / 2,
+	        radius: 15
 	      });
-	    } else {
-	      gopher = new _Gophers.UserGopher({
-	        color: state.gophers[i].color,
-	        id: state.gophers[i].id,
-	        x: state.gophers[i].x,
-	        y: state.gophers[i].y,
-	        radius: state.gophers[i].radius
+	
+	      this.storeGopher(gopher);
+	      this.addGopherToStage(gopher);
+	    }
+	  }, {
+	    key: 'InitStage',
+	    value: function InitStage() {
+	      var _this = this;
+	
+	      createjs.Ticker.setFPS(5);
+	      createjs.Ticker.addEventListener('tick', this.stage);
+	      createjs.Ticker.addEventListener('tick', function (e) {
+	        _this.tick(e);
 	      });
 	    }
+	  }, {
+	    key: 'UpdateStage',
+	    value: function UpdateStage(GameState) {
+	      var s = undefined;
+	      var r = undefined;
+	      console.log('------------------ Updating Stage ---------------');
+	      console.log(this.gophers);
+	      for (s = GameState._gophers.length - 1; s >= 0; s--) {
+	        var exists = null;
 	
-	    gophers.push(gopher);
-	    stage.addChild(gopher);
-	  };
+	        // Only check for gopher existence if their ID doesn't match
+	        // our user's existing ID
+	        if (GameState._gophers[s].i !== GameState._userID) {
+	          console.log('dealing with a non-user gopher');
+	          for (r = this.gophers.length - 1; r >= 0; r--) {
+	            // Check if this gopher has already been added to the stage
+	            if (GameState._gophers[s].i === this.gophers[r]._i) {
+	              console.log('exists');
+	              exists = true;
+	              break;
+	            } else {
+	              exists = false;
+	            }
+	          };
+	        }
 	
-	  createjs.Ticker.setFPS(5);
-	  createjs.Ticker.addEventListener('tick', stage);
-	  createjs.Ticker.addEventListener('tick', tick);
-	}
+	        // Doesn't exist, let's add it to the stage and push
+	        // into our Gophers array
+	        if (exists === false) {
+	          console.log('ghost, adding gopher to stage');
+	          var gopher = new _Gophers.BaseGopher({
+	            color: '#f00',
+	            i: GameState._gophers[s].i,
+	            x: GameState._gophers[s].x,
+	            y: GameState._gophers[s].y,
+	            radius: 15
+	          });
+	
+	          this.storeGopher(gopher);
+	          this.addGopherToStage(gopher);
+	        }
+	      };
+	      if (this.count < 10) {
+	        this.count++;
+	        console.log('tick', GameState);
+	      }
+	    }
+	  }]);
+	
+	  return Stage;
+	})(Object);
+	
+	exports.Stage = Stage;
 
 /***/ },
 /* 2 */
@@ -193,7 +297,7 @@
 	    var g = new Shape();
 	
 	    // Custom properties and methods
-	    g._id = options.id;
+	    g._i = options.i;
 	    g._name = options.name;
 	    g._color = options.color;
 	    g.update = this.update;
@@ -221,8 +325,8 @@
 	  }, {
 	    key: 'update',
 	    value: function update(obj) {
-	      this.x += obj.x;
-	      this.y += obj.y;
+	      this.x = obj.x;
+	      this.y = obj.y;
 	      console.log(this._name, ' has new position of: ', obj, this.x, this.y);
 	    }
 	  }]);
@@ -236,18 +340,16 @@
 	  _inherits(UserGopher, _BaseGopher);
 	
 	  function UserGopher(options) {
-	    var _this = this;
-	
 	    _classCallCheck(this, UserGopher);
 	
 	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options);
 	
-	    _keyboardjs2['default'].bind(['w', 'up'], function (e) {
-	      console.log('upward movement');
-	      _this.moveUp();
-	    }, function (e) {
-	      console.log('stop upward movement');
-	    });
+	    // key.bind(['w', 'up'], (e) => {
+	    //   console.log('upward movement');
+	    //   this.moveUp();
+	    // }, (e) => {
+	    //   console.log('stop upward movement');
+	    // });
 	
 	    // key.bind(['s', 'down'], (e) => {
 	    //   console.log('backward movement');
@@ -1124,6 +1226,58 @@
 	  locale.setKillKey('command');
 	};
 
+
+/***/ },
+/* 8 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var State = (function (_Object) {
+	  _inherits(State, _Object);
+	
+	  function State() {
+	    _classCallCheck(this, State);
+	
+	    _get(Object.getPrototypeOf(State.prototype), "constructor", this).call(this);
+	  }
+	
+	  _createClass(State, [{
+	    key: "setUserId",
+	    value: function setUserId(userID) {
+	      this._userID = userID;
+	    }
+	  }, {
+	    key: "getUserId",
+	    value: function getUserId() {
+	      return this._userID;
+	    }
+	  }, {
+	    key: "setGophers",
+	    value: function setGophers(gophers) {
+	      this._gophers = gophers;
+	    }
+	  }, {
+	    key: "getGophers",
+	    value: function getGophers() {}
+	  }]);
+	
+	  return State;
+	})(Object);
+	
+	exports.State = State;
 
 /***/ }
 /******/ ]);

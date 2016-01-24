@@ -1,0 +1,49 @@
+/* gopher blue rgb(76, 142, 207); */
+
+body {
+  background: gray;
+  margin: 0;
+  color: rgb(76, 142, 207);
+  font-family: 'Press Start 2P', cursive;
+}
+
+canvas {
+  display: block;
+  background: white;
+}
+
+.hud {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  background: black;
+  color: white;
+  padding: 5px;
+}
+
+.loading {
+  background: url('/static/background.jpg') rgb(0, 0, 0);
+  display: block;
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.loading .progress {
+  width: 500px;
+}
+
+.loading > div {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.progress-bar {
+  background-color: rgb(76, 142, 207);
+}

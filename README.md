@@ -31,3 +31,7 @@ Usage of ./spacegophers:
     	http service address (default ":8080")
   -v	enable verbose logging
 ```
+
+## Attributions
+
+Music sourced from http://www.newgrounds.com/audio/listen/106494.

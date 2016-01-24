@@ -57,6 +57,7 @@ func NewEntity(thrust, posx, posy, velx, vely, angle float64) Entity {
 	}
 }
 
+// CommandUpdate describes a change in the state for an Entity.
 type CommandUpdate struct {
 	Forward  bool `json:"f"`
 	Backward bool `json:"b"`

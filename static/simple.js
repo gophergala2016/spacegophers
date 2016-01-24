@@ -1,7 +1,13 @@
 $(document).ready(function() {
 
-  var footer = $("footer .connection");
-  var userFooter = $("footer .player");
+  var SHOW_FPS = false;
+
+  var DOM = {
+    connection: $(".hud .connection"),
+    player: $(".hud .player"),
+    loading: $("body > .loading"),
+    progress_bar: $(".progress-bar")
+  };
 
   // Sourced from: https://ecommerce.shopify.com/c/ecommerce-design/t/ordinal-number-in-javascript-1st-2nd-3rd-4th-29259
   function getGetOrdinal(n) {
@@ -45,9 +51,10 @@ $(document).ready(function() {
     // check if gopher is alive?
     if (deets.s) {
       // it is alive!
-
+      this.shape.opacity = 1;
     } else {
       // it is dead..
+      this.shape.opacity = 0.3;
     }
   };
 
@@ -91,16 +98,24 @@ $(document).ready(function() {
     self.commands = {};
     self.diffx = self.diffy = 0;
 
-    // self.loader.installPlugin()
+    self.loader.installPlugin(createjs.Sound);
 
     var manifest = [
       {id: "usergopher", src: "usergopher.png"},
       {id: "enemygopher", src: "enemygopher.png"},
       {id: "space", src: "background.jpg"},
-      {id: "shot", src: "shot.png"}
+      {id: "shot", src: "shot.png"},
+      {id: "ambience", src:"ambience.mp3"}
     ];
 
     self.loader.loadManifest(manifest, true, "/static/");
+    self.loader.on("progress", function() {
+      var progress = this.progress * 100;
+
+      DOM.progress_bar.css("width", progress + "%");
+      DOM.progress_bar.attr("aria-valuenow", progress);
+      DOM.progress_bar.find(".sr-only").text(progress + " % Loaded");
+    });
     self.loader.on("complete", self.start, self);
   };
 
@@ -141,7 +156,7 @@ $(document).ready(function() {
           self.stage.addChild(self.usergopher.shape);
         }
 
-        userFooter.text("You are in " + getGetOrdinal(place + 1) + " place with " + gopherState.t + " points.");
+        DOM.player.text("You are in " + getGetOrdinal(place + 1) + " place with " + gopherState.t + " points.");
       } else if (gopherState.i in self.enemygophers) {
         gopher = self.enemygophers[gopherState.i];
 
@@ -218,12 +233,24 @@ $(document).ready(function() {
   Game.prototype.start = function() {
     var self = this;
 
-    self.meter = new FPSMeter({
-      theme: 'colorful',
-      heat: 1,
-      graph: 1,
-      history: 20
-    });
+    // hide the loading screen:
+    DOM.loading.fadeOut(1500);
+
+    // play the background music
+    createjs.Sound.play("ambience", 0, 0, -1);
+
+    if (SHOW_FPS) {
+      self.meter = new FPSMeter({
+        theme: 'colorful',
+        heat: 1,
+        graph: 1,
+        history: 20
+      });
+
+      createjs.Ticker.addEventListener("tick", function() {
+        self.meter.tick();
+      });
+    }
 
     self.stage = new createjs.Stage("canvas");
 
@@ -245,13 +272,13 @@ $(document).ready(function() {
     self.ws = new WebSocket("ws://" + window.wshost + "/" + self.id + "/ws");
 
     self.ws.onopen = function(evt) {
-      footer.text("Connection opened");
+      DOM.connection.text("Connection opened");
 
       self.run();
     };
 
     self.ws.onclose = function(evt) {
-      footer.text("Connection closed");
+      DOM.connection.text("Connection closed");
     };
 
     self.ws.onmessage = function(evt) {
@@ -322,7 +349,6 @@ $(document).ready(function() {
       self.sendCommands();
       self.updateState(self.state);
       self.stage.update();
-      self.meter.tick();
     };
   };
 
@@ -346,7 +372,7 @@ $(document).ready(function() {
       new Game(id);
     });
   } else {
-    footer.text("Your browser does not support WebSockets");
+    DOM.connection.text("Your browser does not support WebSockets");
   }
 
 });

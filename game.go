@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"sort"
 
 	"github.com/apex/log"
 	"github.com/xtgo/uuid"
@@ -95,22 +96,30 @@ func (g *Game) Run() {
 			// queue up the command into the command processor
 			g.CommandProcessor.Queue(command)
 
-		case <-g.State.updateState:
-			var gst []Gopher
+		case state := <-g.State.updateState:
+			var gophers []Gopher
 
-			for user := range g.State.Users {
-				gst = append(gst, user.Gopher)
+			for user := range state.Users {
+				gophers = append(gophers, user.Gopher)
+			}
+
+			sort.Sort(ByUserID(gophers))
+
+			var shots = make([]Shot, 0)
+			for shot := range state.Shots {
+				shots = append(shots, *shot)
 			}
 
 			pl, err := json.Marshal(map[string]interface{}{
 				"type":    "state",
-				"gophers": gst,
+				"gophers": gophers,
+				"shots":   shots,
 			})
 			if err != nil {
 				g.Log.Error(err.Error())
 			}
 
-			for user := range g.State.Users {
+			for user := range state.Users {
 				select {
 				case user.send <- pl:
 				default:

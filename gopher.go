@@ -1,14 +1,13 @@
 package main
 
 import (
-	"image"
 	"math"
-
-	"github.com/apex/log"
+	"math/rand"
+	"time"
 )
 
 const (
-	gopherSize     = 30
+	gopherSize     = 50
 	halfGopherSize = gopherSize / 2
 
 	// timestep is the time step for a simulation event
@@ -16,84 +15,85 @@ const (
 	halfTimestep = timestep / 2.0
 
 	// thrustAcceleration is a unit of px/s^2
-	thrustAcceleration = 0.001
+	thrustAcceleration = 0.0001
 	thrustStep         = timestep * thrustAcceleration
-	angleThrust        = math.Pi / 32.0
+	angleThrust        = 0.015
 	angleStep          = timestep * angleThrust
+
+	// a gopher is dead for 5 seconds
+	deadTimeout = 5 * time.Second / DefaultPhysicsLoopInterval
+
+	boardSize = 5000
 )
 
+var r *rand.Rand
+
+func init() {
+	r = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
+func RandomCoordinates(factor float64) Coordinates {
+	return Coordinates{
+		X: r.Float64() * factor,
+		Y: r.Float64() * factor,
+	}
+}
+
+func RandomAngle() float64 {
+	return r.Float64() * 2 * math.Pi
+}
+
+// NewGopher creates a Gopher for a new player.
 func NewGopher(userID string, startingPosition Coordinates) Gopher {
+	pos := RandomCoordinates(boardSize)
+	angle := RandomAngle()
+
 	return Gopher{
-		UserID:   userID,
-		Position: startingPosition,
-		State:    true,
-		// BoundingBox: image.Rect(startingPosition.X-halfGopherSize, startingPosition.Y-halfGopherSize, startingPosition.X+halfGopherSize, startingPosition.Y-halfGopherSize),
+		UserID: userID,
+		Alive:  true,
+		Entity: NewEntity(thrustStep, pos.X, pos.Y, 0, 0, angle),
 	}
 }
 
-type Coordinates struct {
-	X float64 `json:"x"`
-	Y float64 `json:"y"`
-}
+// ByUserID implements sort.Interface for []Gopher based on
+// the ID field.
+type ByUserID []Gopher
 
+func (a ByUserID) Len() int           { return len(a) }
+func (a ByUserID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByUserID) Less(i, j int) bool { return a[i].UserID < a[j].UserID }
+
+// Gopher stores the players details.
 type Gopher struct {
-	UserID      string          `json:"i"`
-	Position    Coordinates     `json:"p"`
-	Velocity    Coordinates     `json:"v"`
-	Angle       float64         `json:"a"`
-	State       bool            `json:"s"`
-	BoundingBox image.Rectangle `json:"-"`
-	Updates     struct {
-		Forward, Backward, Left, Right bool
-	} `json:"-"`
+	UserID string `json:"i"`
+	Entity
+	Alive   bool   `json:"s"`
+	DeadFor uint64 `json:"-"`
 }
 
-func (g *Gopher) Process(command Command) {
-	log.Debug(command.Message)
-	switch command.Message {
-	case "left":
-		g.Updates.Left = true
-	case "right":
-		g.Updates.Right = true
-	case "up":
-		g.Updates.Forward = true
-	case "down":
-		g.Updates.Backward = true
+// Kill marks the gopher as dead, and sets a timeout on it.
+func (g *Gopher) Kill() {
+	g.Alive = false
+	g.DeadFor = uint64(deadTimeout)
+}
+
+func (g *Gopher) MaybeResurrect() {
+	g.DeadFor--
+
+	if g.DeadFor <= 0 {
+		g.Alive = true
 	}
 }
 
-func (g *Gopher) Simulate() {
-	var angleNot = g.Angle
-	var velocityNot = g.Velocity
-
-	if g.Updates.Left != g.Updates.Right {
-		if g.Updates.Left {
-			g.Angle += angleStep
-			g.Updates.Left = false
-		} else {
-			g.Angle -= angleStep
-			g.Updates.Right = false
-		}
-	} else {
-		g.Updates.Left = false
-		g.Updates.Right = false
+func (g *Gopher) BoundingBox() BoundingBox {
+	return BoundingBox{
+		Min: Coordinates{
+			X: g.Position.X,
+			Y: g.Position.Y,
+		},
+		Max: Coordinates{
+			X: g.Position.X + gopherSize,
+			Y: g.Position.Y + gopherSize,
+		},
 	}
-
-	if g.Updates.Forward != g.Updates.Backward {
-		if g.Updates.Forward {
-			g.Velocity.X += thrustStep * math.Cos(angleNot)
-			g.Velocity.Y += thrustStep * math.Sin(angleNot)
-			g.Updates.Forward = false
-		} else {
-			g.Velocity.X -= thrustStep * math.Cos(angleNot)
-			g.Velocity.Y -= thrustStep * math.Sin(angleNot)
-			g.Updates.Backward = false
-		}
-	} else {
-		g.Updates.Forward = false
-		g.Updates.Backward = false
-	}
-
-	g.Position.X += halfTimestep * (velocityNot.X + g.Velocity.X)
-	g.Position.Y += halfTimestep * (velocityNot.Y + g.Velocity.Y)
 }

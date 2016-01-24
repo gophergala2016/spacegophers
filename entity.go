@@ -92,10 +92,10 @@ func (e *Entity) Simulate() {
 	// apply YAW
 	if e.Updates.Left != e.Updates.Right {
 		if e.Updates.Left {
-			e.Angle += angleStep
+			e.Angle -= angleStep
 			e.Updates.Left = false
 		} else {
-			e.Angle -= angleStep
+			e.Angle += angleStep
 			e.Updates.Right = false
 		}
 	} else {

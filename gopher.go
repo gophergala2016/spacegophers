@@ -10,15 +10,13 @@ const (
 	halfTimestep = timestep / 2.0
 
 	// thrustAcceleration is a unit of px/s^2
-	thrustAcceleration = 0.0001
+	thrustAcceleration = 0.01
 	thrustStep         = timestep * thrustAcceleration
-	angleThrust        = 0.015
+	angleThrust        = 0.08
 	angleStep          = timestep * angleThrust
 
 	// a gopher is dead for 5 seconds
 	deadTimeout = 5 * time.Second / DefaultPhysicsLoopInterval
-
-	boardSize = 5000
 
 	pointsPerKill = 100
 )

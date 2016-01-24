@@ -14,6 +14,8 @@ const (
 
 	// DefaultGopherSize is the size in px for the width and height of the gopher.
 	DefaultGopherSize = 50
+
+	boardSize = 300
 )
 
 var addr = flag.String("addr", ":8080", "http service address")

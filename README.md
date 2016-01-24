@@ -1,13 +1,31 @@
 # Space Gophers
 
-Space Gophers is an experiment in using Go routines to calculate complex physics and character/enemy movement server side which then pushes that state through WebSockets to the interface. The Frontend is implemented with a basic CreateJS canvas interface and does absolutely _no_ calculations other than adding/removing/updating objects in the canvas. It is entirely a server-side state object rendered to the canvas.
+Space Gophers is an experiment in using Go routines and WebSockets to calculate complex physics and character/enemy movement server side. The Frontend is implemented with a basic (CreateJS)[http://www.createjs.com/] canvas interface and does absolutely _no_ calculations other than managing objects in the canvas. It is entirely a server-side state object, rendered to the canvas.
 
 ## Getting Started
+Navigate to the `src` folder within your `GOPATH` and then get the repo:
+
 ```bash
-go build
-spacegophers -addr 127.0.0.1:8080
+go get github.com/gophergala2016/spacegophers
 ```
 
+Go into the spacegophers folder:
+```bash
+cd github.com/gophergala2016/spacegophers
+```
+
+And then set it up:
+```bash
+go install
+go build
+```
+
+Once that's done, you can run it:
+```bash
+./spacegophers -addr 127.0.0.1:8080
+```
+
+SpaceGophers accepts the following options:
 ```
 Usage of ./spacegophers:
   -addr string

@@ -37,7 +37,7 @@ export class BaseGopher extends Sprite {
     };
 
     if (obj.a !== this.a) {
-      this.rotation = obj.a * (180/Math.PI);
+      this.rotation = obj.a * (180/Math.PI) + 90;
     }
   }
 }
@@ -53,7 +53,6 @@ export class UserGopher extends BaseGopher {
     let g = super(options);
 
     g.sendCommand = (cmd) => {
-      console.log('test', this.rotation);
       sendCommand(cmd);
     };
 

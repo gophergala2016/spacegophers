@@ -20,6 +20,7 @@ export class Shot extends Sprite {
 
     s.x = options.x;
     s.y = options.y;
+    s._a = options.a;
     s._i = options.i;
     s.update = this.update;
 
@@ -33,6 +34,10 @@ export class Shot extends Sprite {
 
     if (obj.y !== this.y) {
       this.y = obj.y;
+    }
+
+    if (obj.a !== this.a) {
+      this.rotation = obj.a * (180/Math.PI) + 90;
     }
   }
 }

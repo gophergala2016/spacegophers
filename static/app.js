@@ -48,7 +48,7 @@
 	
 	var _Game = __webpack_require__(1);
 	
-	var _AssetManager = __webpack_require__(8);
+	var _AssetManager = __webpack_require__(9);
 	
 	var $ = window.jQuery;
 	var SpaceGophers = new _Game.Game();
@@ -138,7 +138,7 @@
 	
 	var _Gophers = __webpack_require__(2);
 	
-	var _Shot = __webpack_require__(9);
+	var _Shot = __webpack_require__(8);
 	
 	var createjs = window.createjs;
 	
@@ -164,20 +164,149 @@
 	      this._userID = userID;
 	    }
 	  }, {
+	    key: 'createShot',
+	    value: function createShot(shot) {
+	      var s = new _Shot.Shot({
+	        img: this.manager.shot,
+	        a: shot.a,
+	        i: shot.i,
+	        x: shot.p.x,
+	        y: shot.p.y
+	      });
+	
+	      this.storeProjectile(s);
+	      this.addProjectileToStage(s);
+	    }
+	  }, {
+	    key: 'updateShots',
+	    value: function updateShots(shots) {
+	      var shotIDs = [];
+	      var oldShotIDs = [];
+	      var s = undefined;
+	
+	      // Only do this if we have shots
+	      if (shots.length) {
+	        // Grab all of our shot IDs
+	        for (s = shots.length - 1; s >= 0; s--) {
+	          shotIDs.push(shots[s].i);
+	        };
+	
+	        // Grab all of our shotsOnStage IDs
+	        for (s = this.shotsOnStage.length - 1; s >= 0; s--) {
+	          oldShotIDs.push(this.shotsOnStage[s]._i);
+	        };
+	
+	        if (this.shotsOnStage.length > 0) {
+	          // Find our existing shots that match the new set
+	          // of IDs, and update their position
+	          for (s = this.shotsOnStage.length - 1; s >= 0; s--) {
+	            // console.log('ids before exist: ', shotIDs[s], this.shotsOnStage[s]._i);
+	            if (shotIDs[s] === this.shotsOnStage[s]._i) {
+	              // Exists in both, so update and remove id
+	              // from our arrays
+	              shotIDs.splice(s, 1);
+	              oldShotIDs.splice(s, 1);
+	              if (this.count < 100) {
+	                // console.log('ids after exist: ', shotIDs, oldShotIDs);
+	              }
+	              if (this.shotsOnStage[s].update !== undefined) {
+	                this.shotsOnStage[s].update({
+	                  a: shots[s].a,
+	                  x: shots[s].p.x,
+	                  y: shots[s].p.y
+	                });
+	              }
+	              break;
+	            }
+	          }
+	
+	          // These are new shot IDs
+	          for (s = shotIDs.length - 1; s >= 0; s--) {
+	            this.createShot(shots[s]);
+	          };
+	
+	          // These are expired shot IDs
+	          for (s = oldShotIDs - 1; s >= 0; s--) {
+	            this.removeChildFromStage(this.shotsOnStage[s]);
+	          };
+	        } else {
+	          // No shots on stage, so create any we've been pushed
+	          for (s = shots.length - 1; s >= 0; s--) {
+	            this.createShot(shots[s]);
+	          }
+	        }
+	      } else {
+	        // Cleanup stage because there's no shots from our
+	        // updated state
+	        for (s = this.shotsOnStage.length - 1; s >= 0; s--) {
+	          this.removeChildFromStage(this.shotsOnStage[s]);
+	        };
+	      }
+	
+	      // // Check if our shot already exists
+	      // let shotExists = this.shotsOnStage.some(function (el) {
+	      //   return el._i === shots[s].i;
+	      // });
+	
+	      // if (shotExists) {
+	      //   console.log('exists');
+	      //   this.shotsOnStage[s].update({
+	      //     a: shots[s].a,
+	      //     x: shots[s].p.x,
+	      //     y: shots[s].p.y
+	      //   });
+	      //   shots.splice(s, 1);
+	      //   break;
+	      // }
+	
+	      // for (s = shots.length - 1; s >= 0; s--) {
+	      //   let exists = null;
+	      //   if (this.shotsOnStage.length > 0) {
+	      //     for (sInner = this.shotsOnStage.length - 1; sInner >= 0; sInner--) {
+	      //       // If our shot exists in data and on stage, update it
+	      //       if (shots[s].i === this.shotsOnStage[sInner]._i) {
+	      //         exists = true;
+	      //         if (this.shotsOnStage[sInner].update !== undefined) {
+	      //           this.shotsOnStage[sInner].update({
+	      //             a: shots[s].a,
+	      //             x: shots[s].p.x,
+	      //             y: shots[s].p.y
+	      //           });
+	      //         }
+	      //         break;
+	      //       }
+	      //     };
+	      //   } else {
+	      //     // We don't have any projectiles on the screen, but
+	      //     // a shot has been fired because shots.length isn't 0
+	      //     exists = false;
+	      //   }
+	
+	      // Doesn't exist, let's add it to the stage and push
+	      // into our Shots array
+	      // if (exists === false) {
+	      //   let shot = new Shot({
+	      //     img: this.manager.shot,
+	      //     a: shots[s].a,
+	      //     i: shots[s].i,
+	      //     x: shots[s].p.x,
+	      //     y: shots[s].p.y,
+	      //   })
+	
+	      //   this.storeProjectile(shot);
+	      //   this.addProjectileToStage(shot);
+	      // }
+	      // };
+	    }
+	  }, {
 	    key: 'tick',
 	    value: function tick(event) {
 	      var gophers = this.state.gophers;
-	      var shots = this.state.shots;
 	      var u = undefined;
 	      var g = undefined;
 	      var gInner = undefined;
 	      var s = undefined;
 	      var sInner = undefined;
-	
-	      if (this.count < 5) {
-	        this.count++;
-	        console.log(gophers);
-	      }
 	
 	      // Update our User's gopher first
 	      for (u = gophers.length - 1; u >= 0; u--) {
@@ -232,44 +361,7 @@
 	        }
 	      };
 	
-	      for (s = shots.length - 1; s >= 0; s--) {
-	        var exists = null;
-	
-	        if (this.shotsOnStage.length > 0) {
-	          for (sInner = this.shotsOnStage.length - 1; sInner >= 0; sInner--) {
-	            if (shots[s].i === this.shotsOnStage[sInner]._i) {
-	              exists = true;
-	              if (this.shotsOnStage[sInner].update !== undefined) {
-	                this.shotsOnStage[sInner].update({
-	                  x: shots[s].p.x,
-	                  y: shots[s].p.y
-	                });
-	              }
-	              break;
-	            } else {
-	              exists = false;
-	            }
-	          };
-	        } else {
-	          // We don't have any projectiles on the screen, but
-	          // a shot has been fired because shots.length isn't 0
-	          exists = false;
-	        }
-	
-	        // Doesn't exist, let's add it to the stage and push
-	        // into our Shots array
-	        if (exists === false) {
-	          var shot = new _Shot.Shot({
-	            img: this.manager.shot,
-	            i: shots[s].i,
-	            x: shots[s].p.x,
-	            y: shots[s].p.y
-	          });
-	
-	          this.storeProjectile(shot);
-	          this.addProjectileToStage(shot);
-	        }
-	      };
+	      this.updateShots(this.state.shots);
 	
 	      this.stage.update();
 	    }
@@ -292,6 +384,11 @@
 	    key: 'addProjectileToStage',
 	    value: function addProjectileToStage(shot) {
 	      this.stage.addChild(shot);
+	    }
+	  }, {
+	    key: 'removeChildFromStage',
+	    value: function removeChildFromStage(child) {
+	      this.stage.removeChild(child);
 	    }
 	  }, {
 	    key: 'sendCommand',
@@ -401,7 +498,7 @@
 	      };
 	
 	      if (obj.a !== this.a) {
-	        this.rotation = obj.a * (180 / Math.PI);
+	        this.rotation = obj.a * (180 / Math.PI) + 90;
 	      }
 	    }
 	  }]);
@@ -429,14 +526,11 @@
 	  _inherits(UserGopher, _BaseGopher2);
 	
 	  function UserGopher(options, sendCommand) {
-	    var _this = this;
-	
 	    _classCallCheck(this, UserGopher);
 	
 	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options);
 	
 	    g.sendCommand = function (cmd) {
-	      console.log('test', _this.rotation);
 	      sendCommand(cmd);
 	    };
 	
@@ -1297,6 +1391,83 @@
 
 /***/ },
 /* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _keyboardjs = __webpack_require__(3);
+	
+	var _keyboardjs2 = _interopRequireDefault(_keyboardjs);
+	
+	var Sprite = window.createjs.Sprite;
+	var SpriteSheet = window.createjs.SpriteSheet;
+	
+	var Shot = (function (_Sprite) {
+	  _inherits(Shot, _Sprite);
+	
+	  function Shot(options) {
+	    _classCallCheck(this, Shot);
+	
+	    _get(Object.getPrototypeOf(Shot.prototype), 'constructor', this).call(this);
+	    var s = new Sprite();
+	
+	    s.spriteSheet = new SpriteSheet({
+	      images: [options.img],
+	      frames: {
+	        width: 10,
+	        height: 20,
+	        regX: 5,
+	        regY: 10
+	      }
+	    });
+	
+	    s.x = options.x;
+	    s.y = options.y;
+	    s._a = options.a;
+	    s._i = options.i;
+	    s.update = this.update;
+	
+	    return s;
+	  }
+	
+	  _createClass(Shot, [{
+	    key: 'update',
+	    value: function update(obj) {
+	      if (obj.x !== this.x) {
+	        this.x = obj.x;
+	      }
+	
+	      if (obj.y !== this.y) {
+	        this.y = obj.y;
+	      }
+	
+	      if (obj.a !== this.a) {
+	        this.rotation = obj.a * (180 / Math.PI) + 90;
+	      }
+	    }
+	  }]);
+	
+	  return Shot;
+	})(Sprite);
+	
+	exports.Shot = Shot;
+
+/***/ },
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1392,78 +1563,6 @@
 	})();
 
 	exports.AssetManager = AssetManager;
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-	
-	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var _keyboardjs = __webpack_require__(3);
-	
-	var _keyboardjs2 = _interopRequireDefault(_keyboardjs);
-	
-	var Sprite = window.createjs.Sprite;
-	var SpriteSheet = window.createjs.SpriteSheet;
-	
-	var Shot = (function (_Sprite) {
-	  _inherits(Shot, _Sprite);
-	
-	  function Shot(options) {
-	    _classCallCheck(this, Shot);
-	
-	    _get(Object.getPrototypeOf(Shot.prototype), 'constructor', this).call(this);
-	    var s = new Sprite();
-	
-	    s.spriteSheet = new SpriteSheet({
-	      images: [options.img],
-	      frames: {
-	        width: 10,
-	        height: 20,
-	        regX: 5,
-	        regY: 10
-	      }
-	    });
-	
-	    s.x = options.x;
-	    s.y = options.y;
-	    s._i = options.i;
-	    s.update = this.update;
-	
-	    return s;
-	  }
-	
-	  _createClass(Shot, [{
-	    key: 'update',
-	    value: function update(obj) {
-	      if (obj.x !== this.x) {
-	        this.x = obj.x;
-	      }
-	
-	      if (obj.y !== this.y) {
-	        this.y = obj.y;
-	      }
-	    }
-	  }]);
-	
-	  return Shot;
-	})(Sprite);
-	
-	exports.Shot = Shot;
 
 /***/ }
 /******/ ]);

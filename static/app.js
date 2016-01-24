@@ -51,37 +51,33 @@
 	var _AssetManager = __webpack_require__(8);
 	
 	var $ = window.jQuery;
-	// let GameState = new State();
 	var SpaceGophers = new _Game.Game();
 	var Manager = new _AssetManager.AssetManager(SpaceGophers.stage, SpaceGophers.stage.canvas.width, SpaceGophers.stage.canvas.height);
-	var count = 0;
 	var conn = undefined;
+	var initialized = false;
 	
 	function WSClose(e) {
 	  console.log('Connection closed');
 	}
 	
 	function WSMessage(e) {
-	  // console.log(e.data);
 	  var data = JSON.parse(e.data);
+	
 	  if (data.type === 'init') {
 	    // Store the user's ID so we know which
 	    // Gopher belongs to this socket
 	    SpaceGophers.setUserId(data.i);
 	  }
 	
-	  if (data.type === 'state') {
+	  if (data.type === 'state' && initialized === true) {
 	    SpaceGophers.UpdateStage(data);
-	    // if (count < 20) {
-	    //   count++;
-	    //   SpaceGophers.UpdateStage(data);
-	    // }
 	  }
 	}
 	
 	function WSOpen(e) {
 	  // console.log('Connection opened to game: ');
 	  Manager.setDownloadCompleted(function () {
+	    initialized = true;
 	    SpaceGophers.InitStage(Manager, conn);
 	  });
 	
@@ -152,7 +148,8 @@
 	    this.stage = new createjs.Stage('spaceGophers');
 	    this.manager = null;
 	    this.conn = null;
-	    this.gophers = [];
+	    this.gophersOnStage = [];
+	    this.state = {};
 	  }
 	
 	  _createClass(Game, [{
@@ -161,24 +158,71 @@
 	      this._userID = userID;
 	    }
 	  }, {
-	    key: 'getUserId',
-	    value: function getUserId() {
-	      return this._userID;
-	    }
-	  }, {
-	    key: 'setGophers',
-	    value: function setGophers(gophers) {
-	      this._gophers = gophers;
-	    }
-	  }, {
 	    key: 'tick',
 	    value: function tick(event) {
+	      var gophers = this.state.gophers;
+	      var shots = this.state.shots;
+	      var u = undefined;
+	      var g = undefined;
+	      var r = undefined;
+	
+	      // Update our User's gopher first
+	      for (u = gophers.length - 1; u >= 0; u--) {
+	        if (gophers[u].i === this._userID && this.gophersOnStage[u].update !== undefined) {
+	          this.gophersOnStage[u].update({
+	            x: gophers[u].p.x,
+	            y: gophers[u].p.y
+	          });
+	          break;
+	        }
+	      };
+	
+	      // Loop through all of the gophers
+	      for (g = gophers.length - 1; g >= 0; g--) {
+	        var exists = null;
+	
+	        // As long as they aren't our user gopher
+	        if (gophers[g].i !== this._userID) {
+	          // Loop through all the gophers on stage
+	          for (r = this.gophersOnStage.length - 1; r >= 0; r--) {
+	            // If they already exist on the stage
+	            if (gophers[g].i === this.gophersOnStage[r]._i) {
+	              exists = true;
+	              if (this.gophersOnStage[r].update !== undefined) {
+	                this.gophersOnStage[r].update({
+	                  x: gophers[g].p.x,
+	                  y: gophers[g].p.y
+	                });
+	              }
+	              break;
+	            } else {
+	              exists = false;
+	            }
+	          };
+	        }
+	
+	        // Doesn't exist, let's add it to the stage and push
+	        // into our Gophers array
+	        if (exists === false) {
+	          var enemyGopher = new _Gophers.EnemyGopher({
+	            img: this.manager.enemyImg,
+	            i: gophers[g].i,
+	            x: gophers[g].p.x,
+	            y: gophers[g].p.y,
+	            radius: 15
+	          });
+	
+	          this.storeGopher(enemyGopher);
+	          this.addGopherToStage(enemyGopher);
+	        }
+	      };
+	
 	      this.stage.update();
 	    }
 	  }, {
 	    key: 'storeGopher',
 	    value: function storeGopher(gopher) {
-	      this.gophers.push(gopher);
+	      this.gophersOnStage.push(gopher);
 	    }
 	  }, {
 	    key: 'addGopherToStage',
@@ -188,13 +232,7 @@
 	  }, {
 	    key: 'sendCommand',
 	    value: function sendCommand(cmd) {
-	      console.log('send: ', cmd, this.conn);
 	      this.conn.send(cmd);
-	    }
-	  }, {
-	    key: 'CreateUser',
-	    value: function CreateUser(img) {
-	      return;
 	    }
 	  }, {
 	    key: 'InitStage',
@@ -209,7 +247,7 @@
 	        radius: 15
 	      }, this.sendCommand.bind(this));
 	
-	      createjs.Ticker.setFPS(5);
+	      createjs.Ticker.setFPS(30);
 	      createjs.Ticker.addEventListener('tick', this.stage);
 	      createjs.Ticker.addEventListener('tick', function (e) {
 	        _this.tick(e);
@@ -220,54 +258,65 @@
 	      this.storeGopher(userGopher);
 	      this.addGopherToStage(userGopher);
 	    }
-	  }, {
-	    key: 'updateGophers',
-	    value: function updateGophers(newGophers) {
-	      var g = undefined;
-	      var r = undefined;
-	      for (g = newGophers.length - 1; g >= 0; g--) {
-	        var exists = null;
 	
-	        // Only check for gopher existence if their ID doesn't match
-	        // our user's existing ID
-	        if (newGophers[g].i !== this._userID) {
-	          for (r = this.gophers.length - 1; r >= 0; r--) {
-	            // Check if this gopher has already been added to the stage
-	            if (newGophers[g].i === this.gophers[r]._i) {
-	              exists = true;
-	              this.gophers[r].update({
-	                x: newGophers[g].p.x,
-	                y: newGophers[g].p.y
-	              });
-	              break;
-	            } else {
-	              exists = false;
-	            }
-	          };
-	        }
+	    // updateGophers(newGophers) {
+	    //   let g;
+	    //   let r;
 	
-	        // Doesn't exist, let's add it to the stage and push
-	        // into our Gophers array
-	        if (exists === false) {
-	          console.log('ghost, adding gopher to stage', newGophers[g]);
+	    //   for (g = newGophers.length - 1; g >= 0; g--) {
+	    //     let exists = null;
 	
-	          var enemyGopher = new _Gophers.BaseGopher({
-	            img: this.manager.enemyImg,
-	            i: newGophers[g].i,
-	            x: newGophers[g].p.x,
-	            y: newGophers[g].p.y,
-	            radius: 15
-	          });
+	    //     // Only check for gopher existence if their ID doesn't match
+	    //     // our user's existing ID
+	    //     if (newGophers[g].i !== this._userID) {
+	    //       for (r = this.gophers.length - 1; r >= 0; r--) {
+	    //         // Check if this gopher has already been added to the stage
+	    //         if (newGophers[g].i === this.gophers[r]._i) {
+	    //           exists = true;
+	    //           if (this.gophers[r].update !== undefined) {
+	    //             this.gophers[r].update({
+	    //               x: newGophers[g].p.x,
+	    //               y: newGophers[g].p.y
+	    //             });
+	    //           }
+	    //           break;
 	
-	          this.storeGopher(enemyGopher);
-	          this.addGopherToStage(enemyGopher);
-	        }
-	      };
-	    }
+	    //         } else {
+	    //           exists = false;
+	    //         }
+	    //       };
+	    //     }
+	
+	    //     // Doesn't exist, let's add it to the stage and push
+	    //     // into our Gophers array
+	    //     if (exists === false) {
+	    //       let enemyGopher = new EnemyGopher({
+	    //         img: this.manager.enemyImg,
+	    //         i: newGophers[g].i,
+	    //         x: newGophers[g].p.x,
+	    //         y: newGophers[g].p.y,
+	    //         radius: 15
+	    //       });
+	
+	    //       this.storeGopher(enemyGopher);
+	    //       this.addGopherToStage(enemyGopher);
+	    //     } else {
+	    //       // update position of the user's gopher
+	    //       // if (this.gophers[g].update !== undefined) {
+	    //       //   this.gophers[g].update({
+	    //       //     x: newGophers[g].p.x,
+	    //       //     y: newGophers[g].p.y
+	    //       //   });
+	    //       // }
+	    //     }
+	    //   };
+	    // }
+	
 	  }, {
 	    key: 'UpdateStage',
 	    value: function UpdateStage(data) {
-	      this.updateGophers(data.gophers);
+	      this.state = data;
+	      // this.updateGophers(data.gophers);
 	    }
 	  }]);
 	
@@ -315,10 +364,10 @@
 	    g.spriteSheet = new SpriteSheet({
 	      images: [options.img],
 	      frames: {
-	        width: 50,
-	        height: 50,
-	        regX: 25,
-	        regY: 25
+	        width: 100,
+	        height: 100,
+	        regX: 50,
+	        regY: 50
 	      }
 	    });
 	
@@ -333,9 +382,13 @@
 	  _createClass(BaseGopher, [{
 	    key: 'update',
 	    value: function update(obj) {
-	      this.x = obj.x;
-	      this.y = obj.y;
-	      // console.log('gopher has new position of: ', this.x, this.y);
+	      if (obj.x !== this.x) {
+	        this.x = obj.x;
+	      };
+	
+	      if (obj.y !== this.y) {
+	        this.y = obj.y;
+	      };
 	    }
 	  }]);
 	
@@ -344,77 +397,52 @@
 	
 	exports.BaseGopher = BaseGopher;
 	
-	var UserGopher = (function (_BaseGopher) {
-	  _inherits(UserGopher, _BaseGopher);
+	var EnemyGopher = (function (_BaseGopher) {
+	  _inherits(EnemyGopher, _BaseGopher);
+	
+	  function EnemyGopher(options, sendCommand) {
+	    _classCallCheck(this, EnemyGopher);
+	
+	    return _get(Object.getPrototypeOf(EnemyGopher.prototype), 'constructor', this).call(this, options);
+	  }
+	
+	  return EnemyGopher;
+	})(BaseGopher);
+	
+	exports.EnemyGopher = EnemyGopher;
+	
+	var UserGopher = (function (_BaseGopher2) {
+	  _inherits(UserGopher, _BaseGopher2);
 	
 	  function UserGopher(options, sendCommand) {
 	    _classCallCheck(this, UserGopher);
 	
-	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options, sendCommand);
+	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options);
 	
 	    g.sendCommand = function (cmd) {
 	      sendCommand(cmd);
 	    };
 	
 	    _keyboardjs2['default'].bind(['w', 'up'], function (e) {
+	      e.preventDefault();
 	      g.sendCommand('up');
 	    });
 	
-	    //   keyboardJS.bind(['a', 'left'], self.sendCommand('left'));
-	    //   keyboardJS.bind(['d', 'right'], self.sendCommand('right'));
-	    //   keyboardJS.bind(['w', 'up'], self.sendCommand('up'));
-	    //   keyboardJS.bind(['s', 'down'], self.sendCommand('down'));
-	    //   keyboardJS.bind('space', self.sendCommand('fire'));
-	    // };
+	    _keyboardjs2['default'].bind(['s', 'down'], function (e) {
+	      e.preventDefault();
+	      g.sendCommand('down');
+	    });
 	
-	    // Game.prototype.sendCommand = function(command) {
-	    //   var self = this;
+	    _keyboardjs2['default'].bind(['d', 'right'], function (e) {
+	      g.sendCommand('right');
+	    });
 	
-	    //   return function() {
-	    //     console.log("Sending: " + command);
-	    //     self.ws.send(command);
-	    //   };
-	    // };
-	
-	    // key.bind(['s', 'down'], (e) => {
-	    //   console.log('backward movement');
-	    //   // this.moveDown();
-	    // }, (e) => {
-	    //   console.log('stop backward movement');
-	    // });
-	
-	    // key.bind(['a', 'left'], (e) => {
-	    //   console.log('left movement');
-	    //   // this.moveLeft();
-	    // }, (e) => {
-	    //   console.log('stop left movement');
-	    // });
-	
-	    // key.bind(['d', 'right'], (e) => {
-	    //   console.log('right movement');
-	    //   // this.moveRight();
-	    // }, (e) => {
-	    //   console.log('stop right movement');
-	    // });
+	    _keyboardjs2['default'].bind(['a', 'left'], function (e) {
+	      g.sendCommand('left');
+	    });
 	
 	    return g;
 	  }
-	
-	  _createClass(UserGopher, [{
-	    key: 'moveUp',
-	    value: function moveUp() {
-	      this.sendCommand('up');
-	    }
-	  }, {
-	    key: 'moveDown',
-	    value: function moveDown() {}
-	  }, {
-	    key: 'moveLeft',
-	    value: function moveLeft() {}
-	  }, {
-	    key: 'moveRight',
-	    value: function moveRight() {}
-	  }]);
 	
 	  return UserGopher;
 	})(BaseGopher);
@@ -1274,72 +1302,6 @@
 	    this.numElementsLoaded = 0;
 	  }
 	
-	  // function ContentManager(stage, width, height) {
-	  //     // Method called once all downloads are completed
-	  //     var onDownloadCompleted;
-	
-	  //     var NUM_ELEMENTS_TO_DOWNLOAD = 10;
-	  //     var numElementsLoaded = 0;
-	
-	  //     var downloadProgress;
-	
-	  //     // setting the download completed callback
-	  //     this.setDownloadCompleted = function(cb) {
-	  //         onDownloadCompleted = cb;
-	  //     };
-	
-	  //     this.imgBackground = new Image();
-	  //     this.imgPlayer = new Image();
-	
-	  //     // public method to launch the download process
-	  //     this.StartDownload = function () {
-	  //         // add a text object to output the current donwload progression
-	  //         downloadProgress = new createjs.Text("-- %", "14px Arial", "#ff7700");
-	  //         downloadProgress.x = (width / 2) - 50;
-	  //         downloadProgress.y = height / 2;
-	  //         stage.addChild(downloadProgress);
-	  //         stage.update();
-	
-	  //         setDownloadParameters(this.imgBackground, 'img/background.jpg');
-	  //         setDownloadParameters(this.imgPlayer, 'img/Bman.png');
-	
-	  //         createjs.Ticker.addEventListener("tick", this.tick);
-	  //     };
-	
-	  //     function setDownloadParameters(assetElement, url) {
-	  //         assetElement.src = url;
-	  //         assetElement.onload = handleElementLoad;
-	  //         assetElement.onerror = handleElementError;
-	  //     };
-	
-	  //     // our global handler
-	  //     function handleElementLoad(e) {
-	  //         numElementsLoaded++;
-	
-	  //         // If all elements have been downloaded
-	  //         if (numElementsLoaded === NUM_ELEMENTS_TO_DOWNLOAD) {
-	  //             stage.removeChild(downloadProgress);
-	  //             Ticker.removeAllListeners();
-	  //             numElementsLoaded = 0;
-	  //             // we're calling back the method set by SetDownloadCompleted
-	  //             ondownloadcompleted();
-	  //         }
-	  //     }
-	
-	  //     //called if there is an error loading the image (usually due to a 404)
-	  //     function handleElementError(e) {
-	  //         console.log("Error Loading Asset : " + e.target.src);
-	  //     }
-	
-	  //     // Update method which simply shows the current % of download
-	  //     this.tick = function() {
-	  //         downloadProgress.text = "Downloading " + Math.round((numElementsLoaded / NUM_ELEMENTS_TO_DOWNLOAD) * 100) + " %";
-	
-	  //         // update the stage:
-	  //         stage.update();
-	  //     };
-	  // }
-	
 	  _createClass(AssetManager, [{
 	    key: 'setDownloadCompleted',
 	    value: function setDownloadCompleted(cb) {
@@ -1391,7 +1353,9 @@
 	  }, {
 	    key: 'tick',
 	    value: function tick(event) {
-	      this.downloadProgress.text = 'Downloading ' + Math.round(this.numElementsLoaded / this.NUM_ELEMENTS_TO_DOWNLOAD * 100) + ' %';
+	      var text = Math.round(this.numElementsLoaded / this.NUM_ELEMENTS_TO_DOWNLOAD * 100);
+	
+	      this.downloadProgress.text = 'Downloading ' + text + ' %';
 	
 	      // update the stage:
 	      this.stage.update();

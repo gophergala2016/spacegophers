@@ -128,26 +128,6 @@ $(document).ready(function() {
       }
     });
 
-    Object.keys(self.shots).forEach(function(shot_id) {
-      // if the shot went away
-      if (!(shot_id in current_shots)) {
-        var shot = self.shots[shot_id];
-
-        // then remove it from the scene
-        self.stage.removeChild(shot.shape);
-
-        delete self.shots[shot_id];
-      }
-    });
-
-    // self.shots
-    //
-    // current_shots.forEach(function(id) {
-    //   if (!(id in self.shots)) {
-    //     self.
-    //   }
-    // });
-
     state.gophers.forEach(function(gopherState, place) {
       current_gophers[gopherState.i] = true;
 
@@ -174,17 +154,47 @@ $(document).ready(function() {
       }
     });
 
-    Object.keys(self.enemygophers).forEach(function(gopher_id) {
-      // if the shot went away
-      if (!(gopher_id in current_gophers)) {
-        var gopher = self.enemygophers[gopher_id];
+    // compute the diff from me to move everything to center
+    var posx = self.usergopher.shape.x;
+    var posy = self.usergopher.shape.y;
 
+    self.usergopher.shape.x = self.w / 2.0;
+    self.usergopher.shape.y = self.h / 2.0;
+
+    var diffx = self.usergopher.shape.x - posx;
+    var diffy = self.usergopher.shape.y - posy;
+
+    // walk through enemy gophers and update based on my position...
+    Object.keys(self.enemygophers).forEach(function(gopher_id) {
+      var gopher = self.enemygophers[gopher_id];
+
+      // if the gopher went away
+      if (!(gopher_id in current_gophers)) {
         // then remove it from the scene
         self.stage.removeChild(gopher.shape);
 
         delete self.enemygophers[gopher_id];
+      } else {
+        gopher.shape.x += diffx;
+        gopher.shape.y += diffy;
       }
     });
+
+    Object.keys(self.shots).forEach(function(shot_id) {
+      var shot = self.shots[shot_id];
+
+      // if the shot went away
+      if (!(shot_id in current_shots)) {
+        // then remove it from the scene
+        self.stage.removeChild(shot.shape);
+
+        delete self.shots[shot_id];
+      } else {
+        shot.shape.x += diffx;
+        shot.shape.y += diffy;
+      }
+    });
+
   };
 
   Game.prototype.resize = function(self) {

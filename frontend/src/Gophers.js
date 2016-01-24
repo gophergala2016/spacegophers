@@ -8,7 +8,7 @@ export class BaseGopher extends Shape {
     let g = new Shape();
 
     // Custom properties and methods
-    g._id = options.id;
+    g._i = options.i;
     g._name = options.name;
     g._color = options.color;
     g.update = this.update;
@@ -34,8 +34,8 @@ export class BaseGopher extends Shape {
   }
 
   update(obj) {
-    this.x += obj.x;
-    this.y += obj.y;
+    this.x = obj.x;
+    this.y = obj.y;
     console.log(this._name, ' has new position of: ', obj, this.x, this.y);
   }
 }
@@ -44,12 +44,12 @@ export class UserGopher extends BaseGopher {
   constructor(options) {
     let g = super(options);
 
-    key.bind(['w', 'up'], (e) => {
-      console.log('upward movement');
-      this.moveUp();
-    }, (e) => {
-      console.log('stop upward movement');
-    });
+    // key.bind(['w', 'up'], (e) => {
+    //   console.log('upward movement');
+    //   this.moveUp();
+    // }, (e) => {
+    //   console.log('stop upward movement');
+    // });
 
     // key.bind(['s', 'down'], (e) => {
     //   console.log('backward movement');

@@ -6,14 +6,11 @@ import (
 	"github.com/apex/log"
 )
 
-const (
-	DefaultUpdateFPS = 40.0
+// DefaultStateUpdateLoopInterval describes the default interval for which the
+// server should be sending to it's users the current state of the game.
+const DefaultStateUpdateLoopInterval = time.Second / DefaultUpdateFPS
 
-	// DefaultStateUpdateLoopInterval describes the default interval for which the
-	// server should be sending to it's users the current state of the game.
-	DefaultStateUpdateLoopInterval = time.Second / DefaultUpdateFPS
-)
-
+// NewGameState creates a new game state given a logging context.
 func NewGameState(ctx log.Interface) GameState {
 	return GameState{
 		Users:          make(map[*User]bool),

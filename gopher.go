@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	gopherSize     = 50
-	halfGopherSize = gopherSize / 2
+	halfGopherSize = DefaultGopherSize / 2
 
 	// timestep is the time step for a simulation event
 	timestep     = float64(DefaultPhysicsLoopInterval) / float64(time.Millisecond)
@@ -92,8 +91,8 @@ func (g *Gopher) BoundingBox() BoundingBox {
 			Y: g.Position.Y,
 		},
 		Max: Coordinates{
-			X: g.Position.X + gopherSize,
-			Y: g.Position.Y + gopherSize,
+			X: g.Position.X + DefaultGopherSize,
+			Y: g.Position.Y + DefaultGopherSize,
 		},
 	}
 }

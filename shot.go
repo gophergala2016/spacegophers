@@ -9,7 +9,7 @@ import (
 
 const (
 	// shot speed is the speed of the shot that is fired.
-	shotSpeed = thrustAcceleration * timestep * 25
+	shotSpeed = thrustAcceleration * timestep * 80
 
 	// defaultShotLifetime is the lifetime (in sec) for each shot
 	defaultShotLifetime = 1 * time.Second

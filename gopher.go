@@ -10,13 +10,15 @@ const (
 	halfTimestep = timestep / 2.0
 
 	// thrustAcceleration is a unit of px/s^2
-	thrustAcceleration = 0.01
+	thrustAcceleration = 0.005
 	thrustStep         = timestep * thrustAcceleration
 	angleThrust        = 0.08
 	angleStep          = timestep * angleThrust
 
 	// a gopher is dead for 5 seconds
 	deadTimeout = 5 * time.Second / DefaultPhysicsLoopInterval
+
+	shotTimeout = 200 * time.Millisecond / DefaultPhysicsLoopInterval
 
 	pointsPerKill = 100
 )
@@ -36,9 +38,15 @@ func NewGopher(userID string, pos Coordinates) Gopher {
 // the ID field.
 type ByScore []Gopher
 
-func (a ByScore) Len() int           { return len(a) }
-func (a ByScore) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByScore) Less(i, j int) bool { return a[i].Points < a[j].Points }
+func (a ByScore) Len() int      { return len(a) }
+func (a ByScore) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByScore) Less(i, j int) bool {
+	if a[i].Points == a[j].Points {
+		return a[i].UserID < a[j].UserID
+	}
+
+	return a[i].Points > a[j].Points
+}
 
 // Gopher stores the players details.
 type Gopher struct {
@@ -47,6 +55,26 @@ type Gopher struct {
 	Alive   bool   `json:"s"`
 	Points  uint64 `json:"t"`
 	DeadFor uint64 `json:"-"`
+
+	NoShots    bool   `json:"ns"`
+	NoShotsFor uint64 `json:"-"`
+}
+
+// Shoot starts a timer for the the shots, and ensures that no shots can be sent
+// until the timeout is reached again.
+func (g *Gopher) Shoot() {
+	g.NoShots = true
+	g.NoShotsFor = uint64(shotTimeout)
+}
+
+// MaybeShootAgain decrements the timer for the no shoot timeout and if it's 0,
+// sets it to false.
+func (g *Gopher) MaybeShootAgain() {
+	g.NoShotsFor--
+
+	if g.NoShotsFor <= 0 {
+		g.NoShots = false
+	}
 }
 
 // Kill marks the gopher as dead, and sets a timeout on it.

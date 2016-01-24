@@ -51,10 +51,17 @@ func (gs *GameState) Loop() {
 					}
 
 					if command.Message == "fire" {
-						shot := NewShot(command.User, command.User.Gopher)
+						// if i can shoot...
+						if !command.User.Gopher.NoShots {
+							// shoot!
+							shot := NewShot(command.User, command.User.Gopher)
 
-						// add the shot
-						gs.Shots[&shot] = true
+							// add the shot
+							gs.Shots[&shot] = true
+
+							// mark that the gopher shot
+							command.User.Gopher.Shoot()
+						}
 
 					} else {
 						command.User.Gopher.Process(command)
@@ -64,6 +71,10 @@ func (gs *GameState) Loop() {
 
 			for user := range gs.Users {
 				user.Gopher.Simulate()
+
+				if user.Gopher.NoShots {
+					user.Gopher.MaybeShootAgain()
+				}
 			}
 
 			for shot := range gs.Shots {

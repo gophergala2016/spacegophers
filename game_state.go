@@ -97,6 +97,8 @@ func (gs *GameState) Loop() {
 							// award the points
 							shot.User.Gopher.Points += pointsPerKill
 
+							gs.Log.Infof("%d points awarded to Gopher %s", pointsPerKill, shot.User.Gopher.UserID)
+
 							// kill the shot
 							delete(gs.Shots, shot)
 

@@ -2,14 +2,11 @@ import key from 'keyboardjs';
 
 let Sprite = window.createjs.Sprite;
 let SpriteSheet = window.createjs.SpriteSheet;
-// let Bitmap = window.createjs.Bitmap;
 
 export class BaseGopher extends Sprite {
   constructor(options) {
-    // console.log('gopher constructor', options);
     super();
     let g = new Sprite();
-    console.log('sprite: ', g);
 
     g.spriteSheet = new SpriteSheet({
       images: [options.img],
@@ -24,51 +21,45 @@ export class BaseGopher extends Sprite {
     g.x = options.x;
     g.y = options.y;
     g._i = options.i;
-
-    // let gImg = new Image();
-    // let g = new Shape();
-
-    // // Custom properties and methods
-    // g._name = options.name;
-    // g._color = options.color;
-    // g.update = this.update;
-    // g.getName = this.getName;
-    // g.convertDegrees = this.convertDegrees;
-
-    // // EaselJS properties/methods
-    // g.graphics
-    //   .beginFill(options.color)
-    //   .drawCircle(0, 0, 20);
-    // g.pixelsPerSecond = 100;
+    g.update = this.update;
 
     return g;
-  }
-
-  getName() {
-    return this._name;
-  }
-
-  convertDegrees(angle) {
-    return (Math.sin(angle) * 360);
   }
 
   update(obj) {
     this.x = obj.x;
     this.y = obj.y;
-    console.log(this._name, ' has new position of: ', obj, this.x, this.y);
+    // console.log('gopher has new position of: ', this.x, this.y);
   }
 }
 
 export class UserGopher extends BaseGopher {
-  constructor(options) {
-    let g = super(options);
+  constructor(options, sendCommand) {
+    let g = super(options, sendCommand);
 
-    // key.bind(['w', 'up'], (e) => {
-    //   console.log('upward movement');
-    //   this.moveUp();
-    // }, (e) => {
-    //   console.log('stop upward movement');
-    // });
+    g.sendCommand = (cmd) => {
+      sendCommand(cmd);
+    }
+
+    key.bind(['w', 'up'], (e) => {
+      g.sendCommand('up');
+    });
+
+  //   keyboardJS.bind(['a', 'left'], self.sendCommand('left'));
+  //   keyboardJS.bind(['d', 'right'], self.sendCommand('right'));
+  //   keyboardJS.bind(['w', 'up'], self.sendCommand('up'));
+  //   keyboardJS.bind(['s', 'down'], self.sendCommand('down'));
+  //   keyboardJS.bind('space', self.sendCommand('fire'));
+  // };
+
+  // Game.prototype.sendCommand = function(command) {
+  //   var self = this;
+
+  //   return function() {
+  //     console.log("Sending: " + command);
+  //     self.ws.send(command);
+  //   };
+  // };
 
     // key.bind(['s', 'down'], (e) => {
     //   console.log('backward movement');
@@ -94,23 +85,17 @@ export class UserGopher extends BaseGopher {
     return g;
   }
 
-  postAction(action) {
-
-  }
 
   moveUp() {
-    console.log('test: ', this.movementCalculation());
+    this.sendCommand('up');
   }
 
   moveDown() {
-    this.y += this.movementCalculation();
   }
 
   moveLeft() {
-    this.x -= this.movementCalculation();
   }
 
   moveRight() {
-    this.x += this.movementCalculation();
   }
 }

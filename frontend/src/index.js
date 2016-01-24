@@ -6,12 +6,13 @@ let $ = window.jQuery;
 let SpaceGophers = new Game();
 let Manager = new AssetManager(SpaceGophers.stage, SpaceGophers.stage.canvas.width, SpaceGophers.stage.canvas.height);
 let count = 0;
+let conn;
 
-export function WSClose(e) {
+function WSClose(e) {
   console.log('Connection closed');
 }
 
-export function WSMessage(e) {
+function WSMessage(e) {
   // console.log(e.data);
   let data = JSON.parse(e.data);
   if (data.type === 'init') {
@@ -21,25 +22,25 @@ export function WSMessage(e) {
   }
 
   if (data.type === 'state') {
-    // GameState.setGophers(data.gophers);
+    SpaceGophers.UpdateStage(data);
     // if (count < 20) {
     //   count++;
-    //   GameStage.UpdateStage(GameState);
+    //   SpaceGophers.UpdateStage(data);
     // }
   }
 }
 
-export function WSOpen(e) {
-  console.log('Connection opened to game: ');
+function WSOpen(e) {
+  // console.log('Connection opened to game: ');
   Manager.setDownloadCompleted(function() {
-    SpaceGophers.InitStage(Manager);
+    SpaceGophers.InitStage(Manager, conn);
   });
 
   Manager.StartDownload();
 }
 
 function joinGame(gameID) {
-  let conn = new WebSocket(window.wspath + gameID + '/ws');
+  conn = new WebSocket(window.wspath + gameID + '/ws');
 
   conn.onclose = WSClose;
   conn.onmessage = WSMessage;

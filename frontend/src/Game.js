@@ -7,6 +7,8 @@ export class Game extends Object {
     super();
     this.count = 0;
     this.stage = new createjs.Stage('spaceGophers');
+    this.manager = null;
+    this.conn = null;
     this.gophers = [];
   }
 
@@ -23,17 +25,6 @@ export class Game extends Object {
   }
 
   tick(event) {
-    // if (this.count < 10) {
-    //   this.count++;
-    //   console.log('tick')
-    // }
-    // for (i = gophers.length - 1; i >= 0; i--) {
-    //   gophers[i].update({
-    //     x: 5,
-    //     y: 7
-    //   });
-    // };
-
     this.stage.update();
   }
 
@@ -45,18 +36,23 @@ export class Game extends Object {
     this.stage.addChild(gopher);
   }
 
+  sendCommand(cmd) {
+    console.log('send: ', cmd, this.conn);
+    this.conn.send(cmd);
+  }
+
   CreateUser(img) {
     return
   }
 
-  InitStage(Manager) {
+  InitStage(Manager, conn) {
     let userGopher = new UserGopher({
       img: Manager.userImg,
       i: this._userID,
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
       radius: 15
-    });
+    }, this.sendCommand.bind(this));
 
     createjs.Ticker.setFPS(5);
     createjs.Ticker.addEventListener('tick', this.stage);
@@ -64,28 +60,31 @@ export class Game extends Object {
       this.tick(e);
     });
 
+    this.manager = Manager;
+    this.conn = conn;
     this.storeGopher(userGopher);
     this.addGopherToStage(userGopher);
   }
 
-  UpdateStage(GameState) {
-    let s;
+  updateGophers(newGophers) {
+    let g;
     let r;
-    console.log('------------------ Updating Stage ---------------');
-    console.log(this.gophers);
-    for (s = GameState._gophers.length - 1; s >= 0; s--) {
+    for (g = newGophers.length - 1; g >= 0; g--) {
       let exists = null;
 
       // Only check for gopher existence if their ID doesn't match
       // our user's existing ID
-      if (GameState._gophers[s].i !== GameState._userID) {
-        console.log('dealing with a non-user gopher');
+      if (newGophers[g].i !== this._userID) {
         for (r = this.gophers.length - 1; r >= 0; r--) {
           // Check if this gopher has already been added to the stage
-          if (GameState._gophers[s].i === this.gophers[r]._i) {
-            console.log('exists');
+          if (newGophers[g].i === this.gophers[r]._i) {
             exists = true;
+            this.gophers[r].update({
+              x: newGophers[g].p.x,
+              y: newGophers[g].p.y
+            });
             break;
+
           } else {
             exists = false;
           }
@@ -95,22 +94,23 @@ export class Game extends Object {
       // Doesn't exist, let's add it to the stage and push
       // into our Gophers array
       if (exists === false) {
-        console.log('ghost, adding gopher to stage');
-        let gopher = new BaseGopher({
-          color: '#f00',
-          i: GameState._gophers[s].i,
-          x: GameState._gophers[s].x,
-          y: GameState._gophers[s].y,
-          radius: 15
-        }, this.addGopherToStage);
+        console.log('ghost, adding gopher to stage', newGophers[g]);
 
-        this.storeGopher(gopher);
-        // this.addGopherToStage(gopher);
+        let enemyGopher = new BaseGopher({
+          img: this.manager.enemyImg,
+          i: newGophers[g].i,
+          x: newGophers[g].p.x,
+          y: newGophers[g].p.y,
+          radius: 15
+        });
+
+        this.storeGopher(enemyGopher);
+        this.addGopherToStage(enemyGopher);
       }
     };
-    if (this.count < 10) {
-      this.count++;
-      console.log('tick', GameState);
-    }
+  }
+
+  UpdateStage(data) {
+    this.updateGophers(data.gophers);
   }
 }

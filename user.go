@@ -5,6 +5,7 @@ import (
 
 	"github.com/apex/log"
 	"github.com/gorilla/websocket"
+	"github.com/xtgo/uuid"
 )
 
 const (
@@ -22,15 +23,20 @@ const (
 )
 
 func NewUser(ctx log.Interface, ws *websocket.Conn) User {
+	id := uuid.NewRandom().String()
+
 	return User{
-		Log:  ctx.WithField("module", "User"),
-		send: make(chan []byte, 256),
-		ws:   ws,
+		ID:     id,
+		Gopher: NewGopher(id, Coordinates{}),
+		Log:    ctx.WithField("module", "User"),
+		send:   make(chan []byte, 256),
+		ws:     ws,
 	}
 }
 
 // User contains all the details that a user needs to play!
 type User struct {
+	ID     string
 	Log    log.Interface
 	Gopher Gopher
 

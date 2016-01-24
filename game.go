@@ -63,6 +63,19 @@ func (g *Game) Run() {
 			// start the user's handler
 			go user.run()
 
+			initPl := map[string]string{
+				"type": "init",
+				"id":   user.ID,
+			}
+
+			pl, err := json.Marshal(initPl)
+			if err != nil {
+				g.Log.Error(err.Error())
+				return
+			}
+
+			user.send <- pl
+
 			// TODO: maybe add user id?
 			g.Log.WithField("users", len(g.State.Users)).Debug("user registered")
 
@@ -90,6 +103,7 @@ func (g *Game) Run() {
 			}
 
 			pl, err := json.Marshal(map[string]interface{}{
+				"type":    "state",
 				"gophers": gst,
 			})
 			if err != nil {

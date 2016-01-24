@@ -57,16 +57,22 @@ func NewEntity(thrust, posx, posy, velx, vely, angle float64) Entity {
 	}
 }
 
+type CommandUpdate struct {
+	Forward  bool `json:"f"`
+	Backward bool `json:"b"`
+	Left     bool `json:"l"`
+	Right    bool `json:"r"`
+}
+
 // Entity represents a component that moves around the screen
 type Entity struct {
-	Position Coordinates `json:"p"`
-	Velocity Coordinates `json:"v"`
-	Angle    float64     `json:"a"`
-	Updates  struct {
-		Forward, Backward, Left, Right bool
-	} `json:"-"`
-	Size   float64 `json:"-"`
-	thrust float64
+	Position Coordinates   `json:"p"`
+	Velocity Coordinates   `json:"v"`
+	Angle    float64       `json:"a"`
+	Updates  CommandUpdate `json:"-"`
+	Updated  CommandUpdate `json:"u"`
+	Size     float64       `json:"-"`
+	thrust   float64
 }
 
 // Process takes a command and flips the flag.
@@ -89,18 +95,16 @@ func (e *Entity) Simulate() {
 	var angleNot = e.Angle
 	var velocityNot = e.Velocity
 
+	// mark that we did what they thought we did
+	e.Updated = e.Updates
+
 	// apply YAW
 	if e.Updates.Left != e.Updates.Right {
 		if e.Updates.Left {
 			e.Angle -= angleStep
-			e.Updates.Left = false
 		} else {
 			e.Angle += angleStep
-			e.Updates.Right = false
 		}
-	} else {
-		e.Updates.Left = false
-		e.Updates.Right = false
 	}
 
 	// apply THRUST
@@ -114,8 +118,8 @@ func (e *Entity) Simulate() {
 		}
 	}
 
-	e.Updates.Forward = false
-	e.Updates.Backward = false
+	// reset the updates to be performed
+	e.Updates = CommandUpdate{}
 
 	// update POSITION
 	e.Position.X += halfTimestep * (velocityNot.X + e.Velocity.X)

@@ -48,7 +48,17 @@
 	
 	var _Stage = __webpack_require__(1);
 	
+	var wspath = window.wspath;
+	var conn = undefined;
+	var gameID = undefined;
+	
+	function joinGame(gameID) {}
+	
 	document.addEventListener('DOMContentLoaded', function () {
+	  if (window['WebSocket']) {
+	    console.log('woo');
+	  }
+	
 	  (0, _Stage.InitStage)();
 	});
 

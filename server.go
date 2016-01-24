@@ -120,7 +120,7 @@ func (s *Server) Serve() {
 	r.HandleFunc("/{gameID}/ws", s.HandleWS)
 
 	// handle all other static files
-	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
 	// bind the router to the default http handler
 	http.Handle("/", r)

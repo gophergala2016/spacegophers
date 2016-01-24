@@ -69,12 +69,12 @@ func (g *Gopher) MaybeResurrect() {
 func (g *Gopher) BoundingBox() BoundingBox {
 	return BoundingBox{
 		Min: Coordinates{
-			X: g.Position.X,
-			Y: g.Position.Y,
+			X: g.Position.X - halfGopherSize,
+			Y: g.Position.Y - halfGopherSize,
 		},
 		Max: Coordinates{
-			X: g.Position.X + DefaultGopherSize,
-			Y: g.Position.Y + DefaultGopherSize,
+			X: g.Position.X + halfGopherSize,
+			Y: g.Position.Y + halfGopherSize,
 		},
 	}
 }

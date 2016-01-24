@@ -9,7 +9,7 @@ import (
 
 const (
 	// shot speed is the speed of the shot that is fired.
-	shotSpeed = thrustAcceleration * timestep * 500
+	shotSpeed = thrustAcceleration * timestep * 25
 
 	// defaultShotLifetime is the lifetime (in sec) for each shot
 	defaultShotLifetime = 1 * time.Second
@@ -20,8 +20,8 @@ const (
 // middle of the gopher and is fired at the speed of the gopher plus the shot's
 // own speed in the direction of the angle of the Gopher.
 func NewShot(u *User, g Gopher) Shot {
-	posx := g.Position.X + halfGopherSize
-	posy := g.Position.Y + halfGopherSize
+	posx := g.Position.X + math.Cos(g.Angle)*halfGopherSize
+	posy := g.Position.Y + math.Sin(g.Angle)*halfGopherSize
 
 	velx := g.Velocity.X + math.Cos(g.Angle)*shotSpeed
 	vely := g.Velocity.Y + math.Sin(g.Angle)*shotSpeed
@@ -39,7 +39,7 @@ func NewShot(u *User, g Gopher) Shot {
 // Gopher's.
 type Shot struct {
 	ID         string `json:"i"`
-	Gopher     string `json:"g"`
+	Gopher     string `json:"-"`
 	User       *User  `json:"-"`
 	Lifecycles int64  `json:"-"`
 	Entity

@@ -19,10 +19,12 @@ const (
 
 	// MaxPxPerItterationSquared caps the maximum value of the velocity for an entity.
 	MaxPxPerItterationSquared = 0.09
+
+	// the static file to load
+	tpl = "index.html"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
-var tpl = flag.String("template", "index.html", "template to serve for the game")
 var verbose = flag.Bool("v", false, "enable verbose logging")
 
 func main() {
@@ -36,16 +38,15 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	if _, err := os.Stat(*tpl); os.IsNotExist(err) {
+	if _, err := os.Stat(tpl); os.IsNotExist(err) {
 		log.WithError(err).Fatal("template provided does not exist")
 	}
 
 	ctx := log.WithFields(log.Fields{
-		"app":      "spacegophers",
-		"template": *tpl,
+		"app": "spacegophers",
 	})
 
-	s := NewServer(ctx, *addr, *tpl)
+	s := NewServer(ctx, *addr, tpl)
 
 	// serve the server
 	s.Serve()

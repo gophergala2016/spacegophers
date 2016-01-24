@@ -16,6 +16,9 @@ const (
 	DefaultGopherSize = 50
 
 	boardSize = 300
+
+	// MaxPxPerItterationSquared caps the maximum value of the velocity for an entity.
+	MaxPxPerItterationSquared = 0.09
 )
 
 var addr = flag.String("addr", ":8080", "http service address")

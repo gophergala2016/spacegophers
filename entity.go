@@ -108,16 +108,35 @@ func (e *Entity) Simulate() {
 		if e.Updates.Forward {
 			e.Velocity.X += e.thrust * math.Cos(angleNot)
 			e.Velocity.Y += e.thrust * math.Sin(angleNot)
-			e.Updates.Forward = false
 		} else {
 			e.Velocity.X -= e.thrust * math.Cos(angleNot)
 			e.Velocity.Y -= e.thrust * math.Sin(angleNot)
-			e.Updates.Backward = false
 		}
-	} else {
-		e.Updates.Forward = false
-		e.Updates.Backward = false
+
+		var speedx = e.Velocity.X * e.Velocity.X
+		var speedy = e.Velocity.Y * e.Velocity.Y
+
+		// if we are going too fast
+		if speedx >= MaxPxPerItterationSquared {
+			if e.Updates.Forward {
+				e.Velocity.X -= e.thrust * math.Cos(angleNot)
+			} else {
+				e.Velocity.X += e.thrust * math.Cos(angleNot)
+			}
+		}
+
+		if speedy >= MaxPxPerItterationSquared {
+			if e.Updates.Forward {
+				e.Velocity.Y -= e.thrust * math.Sin(angleNot)
+			} else {
+				e.Velocity.Y += e.thrust * math.Sin(angleNot)
+			}
+		}
+
 	}
+
+	e.Updates.Forward = false
+	e.Updates.Backward = false
 
 	// update POSITION
 	e.Position.X += halfTimestep * (velocityNot.X + e.Velocity.X)

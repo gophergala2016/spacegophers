@@ -12,7 +12,7 @@ const (
 	// thrustAcceleration is a unit of px/s^2
 	thrustAcceleration = 0.005
 	thrustStep         = timestep * thrustAcceleration
-	angleThrust        = 0.08
+	angleThrust        = 0.03
 	angleStep          = timestep * angleThrust
 
 	// a gopher is dead for 5 seconds

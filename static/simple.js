@@ -89,13 +89,14 @@ $(document).ready(function() {
     self.loader = new createjs.LoadQueue();
     self.state = false;
     self.commands = {};
+    self.diffx = self.diffy = 0;
 
     // self.loader.installPlugin()
 
     var manifest = [
       {id: "usergopher", src: "usergopher.png"},
       {id: "enemygopher", src: "enemygopher.png"},
-      {id: "sky", src: "sky.png"},
+      {id: "space", src: "background.jpg"},
       {id: "shot", src: "shot.png"}
     ];
 
@@ -161,8 +162,8 @@ $(document).ready(function() {
     self.usergopher.shape.x = self.w / 2.0;
     self.usergopher.shape.y = self.h / 2.0;
 
-    var diffx = self.usergopher.shape.x - posx;
-    var diffy = self.usergopher.shape.y - posy;
+    self.diffx = self.usergopher.shape.x - posx;
+    self.diffy = self.usergopher.shape.y - posy;
 
     // walk through enemy gophers and update based on my position...
     Object.keys(self.enemygophers).forEach(function(gopher_id) {
@@ -175,8 +176,8 @@ $(document).ready(function() {
 
         delete self.enemygophers[gopher_id];
       } else {
-        gopher.shape.x += diffx;
-        gopher.shape.y += diffy;
+        gopher.shape.x += self.diffx;
+        gopher.shape.y += self.diffy;
       }
     });
 
@@ -190,11 +191,13 @@ $(document).ready(function() {
 
         delete self.shots[shot_id];
       } else {
-        shot.shape.x += diffx;
-        shot.shape.y += diffy;
+        shot.shape.x += self.diffx;
+        shot.shape.y += self.diffy;
       }
     });
 
+    self.space.x = -1 * (posx % self.space.tileW) - self.space.tileW;
+    self.space.y = -1 * (posy % self.space.tileH) - self.space.tileH;
   };
 
   Game.prototype.resize = function(self) {
@@ -208,7 +211,7 @@ $(document).ready(function() {
       self.stage.canvas.width = self.w;
       self.stage.canvas.height = self.h;
 
-      self.sky.graphics.beginBitmapFill(self.loader.getResult("sky")).drawRect(0, 0, self.w, self.h);
+      self.space.graphics.beginBitmapFill(self.spaceImg).drawRect(0, 0, self.w + self.spaceImg.width * 2, self.h + self.spaceImg.height * 2);
     };
   };
 
@@ -224,7 +227,11 @@ $(document).ready(function() {
 
     self.stage = new createjs.Stage("canvas");
 
-    self.sky = new createjs.Shape();
+    self.spaceImg = self.loader.getResult("space");
+  	self.space = new createjs.Shape();
+
+    self.space.tileH = self.spaceImg.height;
+  	self.space.tileW = self.spaceImg.width;
 
     // resize the stage
     self.resize(self)();
@@ -233,7 +240,7 @@ $(document).ready(function() {
     window.addEventListener('resize', self.resize(self), false);
     window.addEventListener('orientationchange', self.resize(self), false);
 
-    self.stage.addChild(self.sky);
+    self.stage.addChild(self.space);
 
     self.ws = new WebSocket("ws://" + window.wshost + "/" + self.id + "/ws");
 
@@ -291,7 +298,6 @@ $(document).ready(function() {
 
     Object.keys(self.commands).forEach(function(command) {
       if (self.commands[command]) {
-        console.log("Sending: " + command);
         self.ws.send(command);
       }
     });
@@ -309,8 +315,6 @@ $(document).ready(function() {
     //Update stage will render next frame
     createjs.Ticker.setFPS(60);
     createjs.Ticker.addEventListener("tick", self.handleTick(self));
-
-    console.log("FPS: " + createjs.Ticker.framerate);
   };
 
   Game.prototype.handleTick = function(self) {

@@ -53,13 +53,14 @@
 	exports.WSMessage = WSMessage;
 	exports.WSOpen = WSOpen;
 	
-	var _Stage = __webpack_require__(1);
+	var _Game = __webpack_require__(1);
 	
-	var _State = __webpack_require__(8);
+	var _AssetManager = __webpack_require__(8);
 	
 	var $ = window.jQuery;
-	var GameState = new _State.State();
-	var GameStage = new _Stage.Stage();
+	// let GameState = new State();
+	var SpaceGophers = new _Game.Game();
+	var Manager = new _AssetManager.AssetManager(SpaceGophers.stage, SpaceGophers.stage.canvas.width, SpaceGophers.stage.canvas.height);
 	var count = 0;
 	
 	function WSClose(e) {
@@ -72,21 +73,25 @@
 	  if (data.type === 'init') {
 	    // Store the user's ID so we know which
 	    // Gopher belongs to this socket
-	    GameState.setUserId(data.i);
-	    GameStage.CreateUser(data.i);
+	    SpaceGophers.setUserId(data.i);
 	  }
 	
 	  if (data.type === 'state') {
-	    GameState.setGophers(data.gophers);
-	    if (count < 20) {
-	      count++;
-	      GameStage.UpdateStage(GameState);
-	    }
+	    // GameState.setGophers(data.gophers);
+	    // if (count < 20) {
+	    //   count++;
+	    //   GameStage.UpdateStage(GameState);
+	    // }
 	  }
 	}
 	
 	function WSOpen(e) {
 	  console.log('Connection opened to game: ');
+	  Manager.setDownloadCompleted(function () {
+	    SpaceGophers.InitStage(Manager);
+	  });
+	
+	  Manager.StartDownload();
 	}
 	
 	function joinGame(gameID) {
@@ -95,8 +100,6 @@
 	  conn.onclose = WSClose;
 	  conn.onmessage = WSMessage;
 	  conn.onopen = WSOpen;
-	
-	  GameStage.InitStage();
 	}
 	
 	document.addEventListener('DOMContentLoaded', function () {
@@ -144,19 +147,34 @@
 	
 	var createjs = window.createjs;
 	
-	var Stage = (function (_Object) {
-	  _inherits(Stage, _Object);
+	var Game = (function (_Object) {
+	  _inherits(Game, _Object);
 	
-	  function Stage() {
-	    _classCallCheck(this, Stage);
+	  function Game() {
+	    _classCallCheck(this, Game);
 	
-	    _get(Object.getPrototypeOf(Stage.prototype), 'constructor', this).call(this);
+	    _get(Object.getPrototypeOf(Game.prototype), 'constructor', this).call(this);
 	    this.count = 0;
 	    this.stage = new createjs.Stage('spaceGophers');
 	    this.gophers = [];
 	  }
 	
-	  _createClass(Stage, [{
+	  _createClass(Game, [{
+	    key: 'setUserId',
+	    value: function setUserId(userID) {
+	      this._userID = userID;
+	    }
+	  }, {
+	    key: 'getUserId',
+	    value: function getUserId() {
+	      return this._userID;
+	    }
+	  }, {
+	    key: 'setGophers',
+	    value: function setGophers(gophers) {
+	      this._gophers = gophers;
+	    }
+	  }, {
 	    key: 'tick',
 	    value: function tick(event) {
 	      // if (this.count < 10) {
@@ -184,28 +202,30 @@
 	    }
 	  }, {
 	    key: 'CreateUser',
-	    value: function CreateUser(id) {
-	      var gopher = new _Gophers.UserGopher({
-	        color: '#ff0',
-	        i: id,
+	    value: function CreateUser(img) {
+	      return;
+	    }
+	  }, {
+	    key: 'InitStage',
+	    value: function InitStage(Manager) {
+	      var _this = this;
+	
+	      var userGopher = new _Gophers.UserGopher({
+	        img: Manager.userImg,
+	        i: this._userID,
 	        x: window.innerWidth / 2,
 	        y: window.innerHeight / 2,
 	        radius: 15
 	      });
-	
-	      this.storeGopher(gopher);
-	      this.addGopherToStage(gopher);
-	    }
-	  }, {
-	    key: 'InitStage',
-	    value: function InitStage() {
-	      var _this = this;
 	
 	      createjs.Ticker.setFPS(5);
 	      createjs.Ticker.addEventListener('tick', this.stage);
 	      createjs.Ticker.addEventListener('tick', function (e) {
 	        _this.tick(e);
 	      });
+	
+	      this.storeGopher(userGopher);
+	      this.addGopherToStage(userGopher);
 	    }
 	  }, {
 	    key: 'UpdateStage',
@@ -243,10 +263,10 @@
 	            x: GameState._gophers[s].x,
 	            y: GameState._gophers[s].y,
 	            radius: 15
-	          });
+	          }, this.addGopherToStage);
 	
 	          this.storeGopher(gopher);
-	          this.addGopherToStage(gopher);
+	          // this.addGopherToStage(gopher);
 	        }
 	      };
 	      if (this.count < 10) {
@@ -256,10 +276,10 @@
 	    }
 	  }]);
 	
-	  return Stage;
+	  return Game;
 	})(Object);
 	
-	exports.Stage = Stage;
+	exports.Game = Game;
 
 /***/ },
 /* 2 */
@@ -285,30 +305,51 @@
 	
 	var _keyboardjs2 = _interopRequireDefault(_keyboardjs);
 	
-	var Shape = window.createjs.Shape;
+	var Sprite = window.createjs.Sprite;
+	var SpriteSheet = window.createjs.SpriteSheet;
+	// let Bitmap = window.createjs.Bitmap;
 	
-	var BaseGopher = (function (_Shape) {
-	  _inherits(BaseGopher, _Shape);
+	var BaseGopher = (function (_Sprite) {
+	  _inherits(BaseGopher, _Sprite);
 	
 	  function BaseGopher(options) {
 	    _classCallCheck(this, BaseGopher);
 	
+	    // console.log('gopher constructor', options);
 	    _get(Object.getPrototypeOf(BaseGopher.prototype), 'constructor', this).call(this);
-	    var g = new Shape();
+	    var g = new Sprite();
+	    console.log('sprite: ', g);
 	
-	    // Custom properties and methods
-	    g._i = options.i;
-	    g._name = options.name;
-	    g._color = options.color;
-	    g.update = this.update;
-	    g.getName = this.getName;
-	    g.convertDegrees = this.convertDegrees;
+	    g.spriteSheet = new SpriteSheet({
+	      images: [options.img],
+	      frames: {
+	        width: 50,
+	        height: 50,
+	        regX: 25,
+	        regY: 25
+	      }
+	    });
 	
-	    // EaselJS properties/methods
-	    g.graphics.beginFill(options.color).drawCircle(0, 0, 20);
 	    g.x = options.x;
 	    g.y = options.y;
-	    g.pixelsPerSecond = 100;
+	    g._i = options.i;
+	
+	    // let gImg = new Image();
+	    // let g = new Shape();
+	
+	    // // Custom properties and methods
+	    // g._name = options.name;
+	    // g._color = options.color;
+	    // g.update = this.update;
+	    // g.getName = this.getName;
+	    // g.convertDegrees = this.convertDegrees;
+	
+	    // // EaselJS properties/methods
+	    // g.graphics
+	    //   .beginFill(options.color)
+	    //   .drawCircle(0, 0, 20);
+	    // g.pixelsPerSecond = 100;
+	
 	    return g;
 	  }
 	
@@ -332,7 +373,7 @@
 	  }]);
 	
 	  return BaseGopher;
-	})(Shape);
+	})(Sprite);
 	
 	exports.BaseGopher = BaseGopher;
 	
@@ -1231,53 +1272,161 @@
 /* 8 */
 /***/ function(module, exports) {
 
-	"use strict";
+	'use strict';
 	
-	Object.defineProperty(exports, "__esModule", {
+	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
 	
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 	
-	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	var createjs = window.createjs;
 	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	var AssetManager = (function () {
+	  function AssetManager(stage, width, height) {
+	    _classCallCheck(this, AssetManager);
 	
-	var State = (function (_Object) {
-	  _inherits(State, _Object);
-	
-	  function State() {
-	    _classCallCheck(this, State);
-	
-	    _get(Object.getPrototypeOf(State.prototype), "constructor", this).call(this);
+	    this.enemyImg = new Image();
+	    this.userImg = new Image();
+	    this.downloadProgress = {};
+	    this.onDownloadCompleted = null;
+	    this.stage = stage;
+	    this.width = width;
+	    this.height = height;
+	    this.NUM_ELEMENTS_TO_DOWNLOAD = 2;
+	    this.numElementsLoaded = 0;
 	  }
 	
-	  _createClass(State, [{
-	    key: "setUserId",
-	    value: function setUserId(userID) {
-	      this._userID = userID;
+	  // function ContentManager(stage, width, height) {
+	  //     // Method called once all downloads are completed
+	  //     var onDownloadCompleted;
+	
+	  //     var NUM_ELEMENTS_TO_DOWNLOAD = 10;
+	  //     var numElementsLoaded = 0;
+	
+	  //     var downloadProgress;
+	
+	  //     // setting the download completed callback
+	  //     this.setDownloadCompleted = function(cb) {
+	  //         onDownloadCompleted = cb;
+	  //     };
+	
+	  //     this.imgBackground = new Image();
+	  //     this.imgPlayer = new Image();
+	
+	  //     // public method to launch the download process
+	  //     this.StartDownload = function () {
+	  //         // add a text object to output the current donwload progression
+	  //         downloadProgress = new createjs.Text("-- %", "14px Arial", "#ff7700");
+	  //         downloadProgress.x = (width / 2) - 50;
+	  //         downloadProgress.y = height / 2;
+	  //         stage.addChild(downloadProgress);
+	  //         stage.update();
+	
+	  //         setDownloadParameters(this.imgBackground, 'img/background.jpg');
+	  //         setDownloadParameters(this.imgPlayer, 'img/Bman.png');
+	
+	  //         createjs.Ticker.addEventListener("tick", this.tick);
+	  //     };
+	
+	  //     function setDownloadParameters(assetElement, url) {
+	  //         assetElement.src = url;
+	  //         assetElement.onload = handleElementLoad;
+	  //         assetElement.onerror = handleElementError;
+	  //     };
+	
+	  //     // our global handler
+	  //     function handleElementLoad(e) {
+	  //         numElementsLoaded++;
+	
+	  //         // If all elements have been downloaded
+	  //         if (numElementsLoaded === NUM_ELEMENTS_TO_DOWNLOAD) {
+	  //             stage.removeChild(downloadProgress);
+	  //             Ticker.removeAllListeners();
+	  //             numElementsLoaded = 0;
+	  //             // we're calling back the method set by SetDownloadCompleted
+	  //             ondownloadcompleted();
+	  //         }
+	  //     }
+	
+	  //     //called if there is an error loading the image (usually due to a 404)
+	  //     function handleElementError(e) {
+	  //         console.log("Error Loading Asset : " + e.target.src);
+	  //     }
+	
+	  //     // Update method which simply shows the current % of download
+	  //     this.tick = function() {
+	  //         downloadProgress.text = "Downloading " + Math.round((numElementsLoaded / NUM_ELEMENTS_TO_DOWNLOAD) * 100) + " %";
+	
+	  //         // update the stage:
+	  //         stage.update();
+	  //     };
+	  // }
+	
+	  _createClass(AssetManager, [{
+	    key: 'setDownloadCompleted',
+	    value: function setDownloadCompleted(cb) {
+	      this.onDownloadCompleted = cb;
 	    }
 	  }, {
-	    key: "getUserId",
-	    value: function getUserId() {
-	      return this._userID;
+	    key: 'StartDownload',
+	    value: function StartDownload() {
+	      var _this = this;
+	
+	      this.downloadProgress = new createjs.Text('-- %', '14px Arial', '#ff7700');
+	      this.downloadProgress.x = this.width / 2 - 50;
+	      this.downloadProgress.y = this.height / 2;
+	      this.stage.addChild(this.downloadProgress);
+	      this.stage.update();
+	      this.setDownloadParameters(this.enemyImg, '/static/enemygopher.png');
+	      this.setDownloadParameters(this.userImg, '/static/usergopher.png');
+	
+	      createjs.Ticker.addEventListener('tick', function (e) {
+	        _this.tick(e);
+	      });
 	    }
 	  }, {
-	    key: "setGophers",
-	    value: function setGophers(gophers) {
-	      this._gophers = gophers;
+	    key: 'setDownloadParameters',
+	    value: function setDownloadParameters(assetElement, url) {
+	      assetElement.src = url;
+	      assetElement.onload = this.handleElementLoad.bind(this);
+	      assetElement.onerror = this.handleElementError.bind(this);
 	    }
 	  }, {
-	    key: "getGophers",
-	    value: function getGophers() {}
+	    key: 'handleElementLoad',
+	    value: function handleElementLoad(e) {
+	      this.numElementsLoaded++;
+	
+	      // If all elements have been downloaded
+	      if (this.numElementsLoaded === this.NUM_ELEMENTS_TO_DOWNLOAD) {
+	        this.stage.removeChild(this.downloadProgress);
+	        createjs.Ticker.removeEventListener('tick');
+	        this.numElementsLoaded = 0;
+	        // we're calling back the method set by SetDownloadCompleted
+	        this.onDownloadCompleted();
+	      }
+	    }
+	  }, {
+	    key: 'handleElementError',
+	    value: function handleElementError(e) {
+	      console.log('Error Loading Asset : ' + e.target.src);
+	    }
+	  }, {
+	    key: 'tick',
+	    value: function tick(event) {
+	      this.downloadProgress.text = 'Downloading ' + Math.round(this.numElementsLoaded / this.NUM_ELEMENTS_TO_DOWNLOAD * 100) + ' %';
+	
+	      // update the stage:
+	      this.stage.update();
+	    }
 	  }]);
 	
-	  return State;
-	})(Object);
-	
-	exports.State = State;
+	  return AssetManager;
+	})();
+
+	exports.AssetManager = AssetManager;
 
 /***/ }
 /******/ ]);

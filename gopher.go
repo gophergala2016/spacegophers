@@ -47,7 +47,7 @@ type Gopher struct {
 	UserID string `json:"i"`
 	Entity
 	Alive   bool   `json:"s"`
-	Points  uint64 `json:"p"`
+	Points  uint64 `json:"t"`
 	DeadFor uint64 `json:"-"`
 }
 

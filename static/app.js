@@ -78,6 +78,9 @@
 	  // console.log('Connection opened to game: ');
 	  Manager.setDownloadCompleted(function () {
 	    initialized = true;
+	    window.onkeydown = function (e) {
+	      return !(e.keyCode == 32);
+	    };
 	    SpaceGophers.InitStage(Manager, conn);
 	  });
 	
@@ -135,6 +138,8 @@
 	
 	var _Gophers = __webpack_require__(2);
 	
+	var _Shot = __webpack_require__(9);
+	
 	var createjs = window.createjs;
 	
 	var Game = (function (_Object) {
@@ -149,6 +154,7 @@
 	    this.manager = null;
 	    this.conn = null;
 	    this.gophersOnStage = [];
+	    this.shotsOnStage = [];
 	    this.state = {};
 	  }
 	
@@ -164,12 +170,20 @@
 	      var shots = this.state.shots;
 	      var u = undefined;
 	      var g = undefined;
-	      var r = undefined;
+	      var gInner = undefined;
+	      var s = undefined;
+	      var sInner = undefined;
+	
+	      if (this.count < 5) {
+	        this.count++;
+	        console.log(gophers);
+	      }
 	
 	      // Update our User's gopher first
 	      for (u = gophers.length - 1; u >= 0; u--) {
 	        if (gophers[u].i === this._userID && this.gophersOnStage[u].update !== undefined) {
 	          this.gophersOnStage[u].update({
+	            a: gophers[u].a,
 	            x: gophers[u].p.x,
 	            y: gophers[u].p.y
 	          });
@@ -184,12 +198,13 @@
 	        // As long as they aren't our user gopher
 	        if (gophers[g].i !== this._userID) {
 	          // Loop through all the gophers on stage
-	          for (r = this.gophersOnStage.length - 1; r >= 0; r--) {
+	          for (gInner = this.gophersOnStage.length - 1; gInner >= 0; gInner--) {
 	            // If they already exist on the stage
-	            if (gophers[g].i === this.gophersOnStage[r]._i) {
+	            if (gophers[g].i === this.gophersOnStage[gInner]._i) {
 	              exists = true;
-	              if (this.gophersOnStage[r].update !== undefined) {
-	                this.gophersOnStage[r].update({
+	              if (this.gophersOnStage[gInner].update !== undefined) {
+	                this.gophersOnStage[gInner].update({
+	                  a: gophers[g].a,
 	                  x: gophers[g].p.x,
 	                  y: gophers[g].p.y
 	                });
@@ -206,14 +221,53 @@
 	        if (exists === false) {
 	          var enemyGopher = new _Gophers.EnemyGopher({
 	            img: this.manager.enemyImg,
+	            a: gophers[g].a,
 	            i: gophers[g].i,
 	            x: gophers[g].p.x,
-	            y: gophers[g].p.y,
-	            radius: 15
+	            y: gophers[g].p.y
 	          });
 	
 	          this.storeGopher(enemyGopher);
 	          this.addGopherToStage(enemyGopher);
+	        }
+	      };
+	
+	      for (s = shots.length - 1; s >= 0; s--) {
+	        var exists = null;
+	
+	        if (this.shotsOnStage.length > 0) {
+	          for (sInner = this.shotsOnStage.length - 1; sInner >= 0; sInner--) {
+	            if (shots[s].i === this.shotsOnStage[sInner]._i) {
+	              exists = true;
+	              if (this.shotsOnStage[sInner].update !== undefined) {
+	                this.shotsOnStage[sInner].update({
+	                  x: shots[s].p.x,
+	                  y: shots[s].p.y
+	                });
+	              }
+	              break;
+	            } else {
+	              exists = false;
+	            }
+	          };
+	        } else {
+	          // We don't have any projectiles on the screen, but
+	          // a shot has been fired because shots.length isn't 0
+	          exists = false;
+	        }
+	
+	        // Doesn't exist, let's add it to the stage and push
+	        // into our Shots array
+	        if (exists === false) {
+	          var shot = new _Shot.Shot({
+	            img: this.manager.shot,
+	            i: shots[s].i,
+	            x: shots[s].p.x,
+	            y: shots[s].p.y
+	          });
+	
+	          this.storeProjectile(shot);
+	          this.addProjectileToStage(shot);
 	        }
 	      };
 	
@@ -230,6 +284,16 @@
 	      this.stage.addChild(gopher);
 	    }
 	  }, {
+	    key: 'storeProjectile',
+	    value: function storeProjectile(projectile) {
+	      this.shotsOnStage.push(projectile);
+	    }
+	  }, {
+	    key: 'addProjectileToStage',
+	    value: function addProjectileToStage(shot) {
+	      this.stage.addChild(shot);
+	    }
+	  }, {
 	    key: 'sendCommand',
 	    value: function sendCommand(cmd) {
 	      this.conn.send(cmd);
@@ -242,9 +306,9 @@
 	      var userGopher = new _Gophers.UserGopher({
 	        img: Manager.userImg,
 	        i: this._userID,
+	        a: 0,
 	        x: window.innerWidth / 2,
-	        y: window.innerHeight / 2,
-	        radius: 15
+	        y: window.innerHeight / 2
 	      }, this.sendCommand.bind(this));
 	
 	      createjs.Ticker.setFPS(30);
@@ -258,65 +322,10 @@
 	      this.storeGopher(userGopher);
 	      this.addGopherToStage(userGopher);
 	    }
-	
-	    // updateGophers(newGophers) {
-	    //   let g;
-	    //   let r;
-	
-	    //   for (g = newGophers.length - 1; g >= 0; g--) {
-	    //     let exists = null;
-	
-	    //     // Only check for gopher existence if their ID doesn't match
-	    //     // our user's existing ID
-	    //     if (newGophers[g].i !== this._userID) {
-	    //       for (r = this.gophers.length - 1; r >= 0; r--) {
-	    //         // Check if this gopher has already been added to the stage
-	    //         if (newGophers[g].i === this.gophers[r]._i) {
-	    //           exists = true;
-	    //           if (this.gophers[r].update !== undefined) {
-	    //             this.gophers[r].update({
-	    //               x: newGophers[g].p.x,
-	    //               y: newGophers[g].p.y
-	    //             });
-	    //           }
-	    //           break;
-	
-	    //         } else {
-	    //           exists = false;
-	    //         }
-	    //       };
-	    //     }
-	
-	    //     // Doesn't exist, let's add it to the stage and push
-	    //     // into our Gophers array
-	    //     if (exists === false) {
-	    //       let enemyGopher = new EnemyGopher({
-	    //         img: this.manager.enemyImg,
-	    //         i: newGophers[g].i,
-	    //         x: newGophers[g].p.x,
-	    //         y: newGophers[g].p.y,
-	    //         radius: 15
-	    //       });
-	
-	    //       this.storeGopher(enemyGopher);
-	    //       this.addGopherToStage(enemyGopher);
-	    //     } else {
-	    //       // update position of the user's gopher
-	    //       // if (this.gophers[g].update !== undefined) {
-	    //       //   this.gophers[g].update({
-	    //       //     x: newGophers[g].p.x,
-	    //       //     y: newGophers[g].p.y
-	    //       //   });
-	    //       // }
-	    //     }
-	    //   };
-	    // }
-	
 	  }, {
 	    key: 'UpdateStage',
 	    value: function UpdateStage(data) {
 	      this.state = data;
-	      // this.updateGophers(data.gophers);
 	    }
 	  }]);
 	
@@ -374,6 +383,7 @@
 	    g.x = options.x;
 	    g.y = options.y;
 	    g._i = options.i;
+	    g._a = options.a;
 	    g.update = this.update;
 	
 	    return g;
@@ -389,6 +399,10 @@
 	      if (obj.y !== this.y) {
 	        this.y = obj.y;
 	      };
+	
+	      if (obj.a !== this.a) {
+	        this.rotation = obj.a * (180 / Math.PI);
+	      }
 	    }
 	  }]);
 	
@@ -415,11 +429,14 @@
 	  _inherits(UserGopher, _BaseGopher2);
 	
 	  function UserGopher(options, sendCommand) {
+	    var _this = this;
+	
 	    _classCallCheck(this, UserGopher);
 	
 	    var g = _get(Object.getPrototypeOf(UserGopher.prototype), 'constructor', this).call(this, options);
 	
 	    g.sendCommand = function (cmd) {
+	      console.log('test', _this.rotation);
 	      sendCommand(cmd);
 	    };
 	
@@ -434,11 +451,18 @@
 	    });
 	
 	    _keyboardjs2['default'].bind(['d', 'right'], function (e) {
+	      e.preventDefault();
 	      g.sendCommand('right');
 	    });
 	
 	    _keyboardjs2['default'].bind(['a', 'left'], function (e) {
+	      e.preventDefault();
 	      g.sendCommand('left');
+	    });
+	
+	    _keyboardjs2['default'].bind('spacebar', function (e) {
+	      g.sendCommand('fire');
+	      return false;
 	    });
 	
 	    return g;
@@ -1293,6 +1317,7 @@
 	
 	    this.enemyImg = new Image();
 	    this.userImg = new Image();
+	    this.shot = new Image();
 	    this.downloadProgress = {};
 	    this.onDownloadCompleted = null;
 	    this.stage = stage;
@@ -1319,6 +1344,7 @@
 	      this.stage.update();
 	      this.setDownloadParameters(this.enemyImg, '/static/enemygopher.png');
 	      this.setDownloadParameters(this.userImg, '/static/usergopher.png');
+	      this.setDownloadParameters(this.shot, '/static/shot.png');
 	
 	      createjs.Ticker.addEventListener('tick', function (e) {
 	        _this.tick(e);
@@ -1366,6 +1392,78 @@
 	})();
 
 	exports.AssetManager = AssetManager;
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var _keyboardjs = __webpack_require__(3);
+	
+	var _keyboardjs2 = _interopRequireDefault(_keyboardjs);
+	
+	var Sprite = window.createjs.Sprite;
+	var SpriteSheet = window.createjs.SpriteSheet;
+	
+	var Shot = (function (_Sprite) {
+	  _inherits(Shot, _Sprite);
+	
+	  function Shot(options) {
+	    _classCallCheck(this, Shot);
+	
+	    _get(Object.getPrototypeOf(Shot.prototype), 'constructor', this).call(this);
+	    var s = new Sprite();
+	
+	    s.spriteSheet = new SpriteSheet({
+	      images: [options.img],
+	      frames: {
+	        width: 10,
+	        height: 20,
+	        regX: 5,
+	        regY: 10
+	      }
+	    });
+	
+	    s.x = options.x;
+	    s.y = options.y;
+	    s._i = options.i;
+	    s.update = this.update;
+	
+	    return s;
+	  }
+	
+	  _createClass(Shot, [{
+	    key: 'update',
+	    value: function update(obj) {
+	      if (obj.x !== this.x) {
+	        this.x = obj.x;
+	      }
+	
+	      if (obj.y !== this.y) {
+	        this.y = obj.y;
+	      }
+	    }
+	  }]);
+	
+	  return Shot;
+	})(Sprite);
+	
+	exports.Shot = Shot;
 
 /***/ }
 /******/ ]);

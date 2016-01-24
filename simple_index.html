@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <script src="/static/createjs.min.js" charset="utf-8"></script>
+    <script src="/static/keyboard.min.js" charset="utf-8"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js" charset="utf-8"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/fpsmeter/0.3.1/fpsmeter.js" charset="utf-8"></script>
+    <script type="text/javascript">window.wshost = "{{$}}";</script>
+    <script src="/static/simple.js" charset="utf-8"></script>
+    <style media="screen">
+      body {
+        background: gray;
+        margin: 0;
+      }
+
+      canvas {
+        display: block;
+        background: white;
+      }
+
+      footer {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        background: black;
+        color: white;
+        padding: 5px;
+      }
+
+      footer div {
+
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <footer>
+      <div class="player"></div>
+      <div class="connection"></div>
+    </footer>
+  </body>
+</html>

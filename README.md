@@ -16,7 +16,6 @@ cd github.com/gophergala2016/spacegophers
 
 And then set it up:
 ```bash
-go install
 go build
 ```
 
@@ -30,7 +29,5 @@ SpaceGophers accepts the following options:
 Usage of ./spacegophers:
   -addr string
     	http service address (default ":8080")
-  -template string
-    	template to serve for the game (default "index.html")
   -v	enable verbose logging
 ```

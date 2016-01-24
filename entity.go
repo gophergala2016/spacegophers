@@ -1,7 +1,31 @@
 package main
 
-import "math"
+import (
+	"math"
+	"math/rand"
+	"time"
+)
 
+var r *rand.Rand
+
+func init() {
+	r = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
+// RandomCoordinates returns a set of corrdinates binded by the factor provided.
+func RandomCoordinates(factor float64) Coordinates {
+	return Coordinates{
+		X: r.Float64() * factor,
+		Y: r.Float64() * factor,
+	}
+}
+
+// RandomAngle returns a angle randomly.
+func RandomAngle() float64 {
+	return r.Float64() * 2 * math.Pi
+}
+
+// BoundingBox describes a box that contains a top left and a top right point.
 type BoundingBox struct {
 	Max, Min Coordinates
 }
@@ -12,6 +36,7 @@ type Coordinates struct {
 	Y float64 `json:"y"`
 }
 
+// Inside returns true if the coordinate is within the bounding box.
 func (c *Coordinates) Inside(r BoundingBox) bool {
 	return c.X >= r.Min.X && c.X <= r.Max.X && c.Y >= r.Min.Y && c.Y <= r.Max.Y
 }

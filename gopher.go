@@ -1,10 +1,6 @@
 package main
 
-import (
-	"math"
-	"math/rand"
-	"time"
-)
+import "time"
 
 const (
 	halfGopherSize = DefaultGopherSize / 2
@@ -25,26 +21,8 @@ const (
 	boardSize = 5000
 )
 
-var r *rand.Rand
-
-func init() {
-	r = rand.New(rand.NewSource(time.Now().UnixNano()))
-}
-
-func RandomCoordinates(factor float64) Coordinates {
-	return Coordinates{
-		X: r.Float64() * factor,
-		Y: r.Float64() * factor,
-	}
-}
-
-func RandomAngle() float64 {
-	return r.Float64() * 2 * math.Pi
-}
-
 // NewGopher creates a Gopher for a new player.
-func NewGopher(userID string, startingPosition Coordinates) Gopher {
-	pos := RandomCoordinates(boardSize)
+func NewGopher(userID string, pos Coordinates) Gopher {
 	angle := RandomAngle()
 
 	return Gopher{
@@ -53,14 +31,6 @@ func NewGopher(userID string, startingPosition Coordinates) Gopher {
 		Entity: NewEntity(thrustStep, pos.X, pos.Y, 0, 0, angle),
 	}
 }
-
-// ByUserID implements sort.Interface for []Gopher based on
-// the ID field.
-type ByUserID []Gopher
-
-func (a ByUserID) Len() int           { return len(a) }
-func (a ByUserID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByUserID) Less(i, j int) bool { return a[i].UserID < a[j].UserID }
 
 // Gopher stores the players details.
 type Gopher struct {
@@ -76,6 +46,8 @@ func (g *Gopher) Kill() {
 	g.DeadFor = uint64(deadTimeout)
 }
 
+// MaybeResurrect will decrement the dead lifecycle count and if it is zero, it
+// will mark the Gopher as alive.
 func (g *Gopher) MaybeResurrect() {
 	g.DeadFor--
 
@@ -84,6 +56,7 @@ func (g *Gopher) MaybeResurrect() {
 	}
 }
 
+// BoundingBox returns the BoundingBox of the Gopher.
 func (g *Gopher) BoundingBox() BoundingBox {
 	return BoundingBox{
 		Min: Coordinates{

@@ -33,6 +33,8 @@ type GameState struct {
 	updateState chan *GameState
 }
 
+// Loop recieves commands from the CommandProcessor to simulate and also
+// triggers the state update channel to update users connected to the game.
 func (gs *GameState) Loop() {
 	updateTimer := time.NewTicker(gs.UpdateInterval)
 

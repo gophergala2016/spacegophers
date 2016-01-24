@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"sort"
 
 	"github.com/apex/log"
 	"github.com/xtgo/uuid"
@@ -46,11 +45,11 @@ type Game struct {
 
 // Run starts up the listener for the game events.
 func (g *Game) Run() {
-	// start the command processor loop
-	go g.CommandProcessor.Loop()
-
 	// start the state loop
 	go g.State.Loop()
+
+	// start the command processor loop
+	go g.CommandProcessor.Loop()
 
 	for {
 		select {
@@ -71,13 +70,12 @@ func (g *Game) Run() {
 
 			pl, err := json.Marshal(initPl)
 			if err != nil {
-				g.Log.Error(err.Error())
+				g.Log.WithError(err).Debug("could not marshal init payload")
 				return
 			}
 
 			user.send <- pl
 
-			// TODO: maybe add user id?
 			g.Log.WithField("users", len(g.State.Users)).Debug("user registered")
 
 		case user := <-g.unregister:
@@ -97,15 +95,12 @@ func (g *Game) Run() {
 			g.CommandProcessor.Queue(command)
 
 		case state := <-g.State.updateState:
-			var gophers []Gopher
-
+			var gophers = make([]Gopher, 0, len(state.Users))
 			for user := range state.Users {
 				gophers = append(gophers, user.Gopher)
 			}
 
-			sort.Sort(ByUserID(gophers))
-
-			var shots = make([]Shot, 0)
+			var shots = make([]Shot, 0, len(state.Shots))
 			for shot := range state.Shots {
 				shots = append(shots, *shot)
 			}
@@ -116,7 +111,8 @@ func (g *Game) Run() {
 				"shots":   shots,
 			})
 			if err != nil {
-				g.Log.Error(err.Error())
+				g.Log.WithError(err).Debug("could not marshal game state payload")
+				return
 			}
 
 			for user := range state.Users {

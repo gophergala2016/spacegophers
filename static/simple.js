@@ -28,7 +28,7 @@ $(document).ready(function() {
       framerate: 1,
       images: [this.image],
       frames: {
-        count: 13,
+        count: 37,
         width: 50,
         height: 50,
         regX: 25,
@@ -37,8 +37,14 @@ $(document).ready(function() {
       animations: {
         static: 0,
         death: [1, 4],
-        thrust: [5, 8, "static", .25],
-        reverse: [9, 12, "static", .25]
+        thruster: [5, 8, "static", .25],
+        thrusterLeft: [9, 12, "static", .25],
+        thrusterRight: [13, 16, "static", .25],
+        reverse: [17, 20, "static", .25],
+        reverseLeft: [21, 24, "static", .25],
+        reverseRight: [25, 28, "static", .25],
+        left: [29, 32, "static", .25],
+        right: [33, 36, "static", .25],
       }
     });
 
@@ -63,9 +69,33 @@ $(document).ready(function() {
     if (deets.s) {
       // it is alive!
       this.shape.opacity = 1;
-      // it is dead..
-      if (this.game.commands.up == true) { this.shape.gotoAndPlay("thrust"); }
-      if (this.game.commands.down == true) { console.log('reverse'); this.shape.gotoAndPlay("reverse"); }
+      if (this.game.commands.up !== undefined && this.game.commands.up == true) { 
+        if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+          this.shape.gotoAndPlay("thrusterRight");
+        } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+          this.shape.gotoAndPlay("thrusterLeft");
+        } else {
+          this.shape.gotoAndPlay("thruster");
+        }
+      }
+
+      if (this.game.commands.down !== undefined && this.game.commands.down == true) { 
+        if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+          this.shape.gotoAndPlay("reverseRight");
+        } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+          this.shape.gotoAndPlay("reverseLeft");
+        } else {
+          this.shape.gotoAndPlay("reverse");
+        }
+      }
+
+      if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+        this.shape.gotoAndPlay("right");
+      }
+
+      if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+        this.shape.gotoAndPlay("left");
+      }
     } else {
       this.shape.gotoAndPlay("death");
       this.shape.opacity = 0.3;

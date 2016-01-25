@@ -2,6 +2,8 @@
 
 Space Gophers is an experiment in using Go routines and WebSockets to calculate complex physics and character/enemy movement server side. The Frontend is implemented with a basic [CreateJS](http://www.createjs.com/) canvas interface and does absolutely _no_ calculations other than managing objects in the canvas. It is entirely a server-side state object, rendered to the canvas.
 
+Share your url with friends to allow them to join in! WASD to move and SPACE to fire!
+
 ## Getting Started
 Navigate to the `src` folder within your `GOPATH` and then get the repo:
 

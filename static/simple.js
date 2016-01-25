@@ -20,6 +20,7 @@ $(document).ready(function() {
     this.id = deets.i;
 
     this.isPlayer = isPlayer;
+    this.isDead = false;
     this.shape = new createjs.Sprite();
     this.game = game;
 
@@ -70,8 +71,9 @@ $(document).ready(function() {
     // check if gopher is alive?
     if (deets.s) {
       // it is alive!
+      this.isDead = false;
+      this.shape.gotoAndStop("static");
       if (this.isPlayer){
-        this.shape.opacity = 1;
         if (this.game.commands.up !== undefined && this.game.commands.up == true) {
           if (this.game.commands.left !== undefined && this.game.commands.left == true) {
             this.shape.gotoAndPlay("thrusterRight");

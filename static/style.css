@@ -47,3 +47,12 @@ canvas {
 .progress-bar {
   background-color: rgb(76, 142, 207);
 }
+
+.loading .status {
+  display: none;
+}
+
+#forkMeOnGithub {
+  position: absolute;
+  z-index: 101;
+}

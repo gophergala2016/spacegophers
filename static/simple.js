@@ -72,7 +72,7 @@ $(document).ready(function() {
       // it is alive!
       if (this.isPlayer){
         this.shape.opacity = 1;
-        if (this.game.commands.up !== undefined && this.game.commands.up == true) { 
+        if (this.game.commands.up !== undefined && this.game.commands.up == true) {
           if (this.game.commands.left !== undefined && this.game.commands.left == true) {
             this.shape.gotoAndPlay("thrusterRight");
           } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
@@ -82,7 +82,7 @@ $(document).ready(function() {
           }
         }
 
-        if (this.game.commands.down !== undefined && this.game.commands.down == true) { 
+        if (this.game.commands.down !== undefined && this.game.commands.down == true) {
           if (this.game.commands.left !== undefined && this.game.commands.left == true) {
             this.shape.gotoAndPlay("reverseRight");
           } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
@@ -285,7 +285,7 @@ $(document).ready(function() {
     DOM.loading.fadeOut(1500);
 
     // play the background music
-    createjs.Sound.play("ambience", 0, 0, -1);
+    self.background_music = createjs.Sound.play("ambience", 0, 0, -1);
 
     if (SHOW_FPS) {
       self.meter = new FPSMeter({
@@ -326,7 +326,17 @@ $(document).ready(function() {
     };
 
     self.ws.onclose = function(evt) {
-      DOM.connection.text("Connection closed");
+      DOM.loading.find(".progress").hide();
+
+      var status = DOM.loading.find(".status");
+
+      DOM.loading.fadeIn(1500);
+      status.show();
+      status.text("Connection lost");
+
+      createjs.Sound.play("explosion", 10);
+
+      self.background_music.stop();
     };
 
     self.ws.onmessage = function(evt) {

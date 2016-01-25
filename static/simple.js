@@ -53,6 +53,7 @@ $(document).ready(function() {
     this.update(deets);
 
     this.shape.play();
+    this.count = 0;
 
     console.log("New Gopher[" + this.id + "] at " + this.shape.x + "," + this.shape.y);
   };
@@ -69,31 +70,31 @@ $(document).ready(function() {
     if (deets.s) {
       // it is alive!
       this.shape.opacity = 1;
-      if (this.game.commands.up !== undefined && this.game.commands.up == true) { 
-        if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+      if (deets.u.f !== undefined && deets.u.f == true) { 
+        if (deets.u.l !== undefined && deets.u.l == true) {
           this.shape.gotoAndPlay("thrusterRight");
-        } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+        } else if (deets.u.r !== undefined && deets.u.r == true) {
           this.shape.gotoAndPlay("thrusterLeft");
         } else {
           this.shape.gotoAndPlay("thruster");
         }
       }
 
-      if (this.game.commands.down !== undefined && this.game.commands.down == true) { 
-        if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+      if (deets.u.b !== undefined && deets.u.b == true) { 
+        if (deets.u.l !== undefined && deets.u.l == true) {
           this.shape.gotoAndPlay("reverseRight");
-        } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+        } else if (deets.u.r !== undefined && deets.u.r == true) {
           this.shape.gotoAndPlay("reverseLeft");
         } else {
           this.shape.gotoAndPlay("reverse");
         }
       }
 
-      if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+      if (deets.u.l !== undefined && deets.u.l == true) {
         this.shape.gotoAndPlay("right");
       }
 
-      if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+      if (deets.u.r !== undefined && deets.u.r == true) {
         this.shape.gotoAndPlay("left");
       }
     } else {

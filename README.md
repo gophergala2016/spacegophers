@@ -35,3 +35,6 @@ Usage of ./spacegophers:
 ## Attributions
 
 Music sourced from http://www.newgrounds.com/audio/listen/106494.
+
+## Bugs
+* Need to implement a better system for animating the enemy gophers... updating too often right now so we don't get proper animation, disabled the enemy gophers' animations for now.

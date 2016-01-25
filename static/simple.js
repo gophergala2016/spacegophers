@@ -19,6 +19,7 @@ $(document).ready(function() {
   var Gopher = function(game, deets, isPlayer) {
     this.id = deets.i;
 
+    this.isPlayer = isPlayer;
     this.shape = new createjs.Sprite();
     this.game = game;
 
@@ -28,7 +29,7 @@ $(document).ready(function() {
       framerate: 1,
       images: [this.image],
       frames: {
-        count: 37,
+        count: 39,
         width: 50,
         height: 50,
         regX: 25,
@@ -36,7 +37,7 @@ $(document).ready(function() {
       },
       animations: {
         static: 0,
-        death: [1, 4],
+        death: [1, 4, "dead", .25],
         thruster: [5, 8, "static", .25],
         thrusterLeft: [9, 12, "static", .25],
         thrusterRight: [13, 16, "static", .25],
@@ -45,6 +46,7 @@ $(document).ready(function() {
         reverseRight: [25, 28, "static", .25],
         left: [29, 32, "static", .25],
         right: [33, 36, "static", .25],
+        dead: 37,
       }
     });
 
@@ -53,7 +55,6 @@ $(document).ready(function() {
     this.update(deets);
 
     this.shape.play();
-    this.count = 0;
 
     console.log("New Gopher[" + this.id + "] at " + this.shape.x + "," + this.shape.y);
   };
@@ -69,37 +70,39 @@ $(document).ready(function() {
     // check if gopher is alive?
     if (deets.s) {
       // it is alive!
-      this.shape.opacity = 1;
-      if (deets.u.f !== undefined && deets.u.f == true) { 
-        if (deets.u.l !== undefined && deets.u.l == true) {
-          this.shape.gotoAndPlay("thrusterRight");
-        } else if (deets.u.r !== undefined && deets.u.r == true) {
-          this.shape.gotoAndPlay("thrusterLeft");
-        } else {
-          this.shape.gotoAndPlay("thruster");
+      if (this.isPlayer){
+        this.shape.opacity = 1;
+        if (this.game.commands.up !== undefined && this.game.commands.up == true) { 
+          if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+            this.shape.gotoAndPlay("thrusterRight");
+          } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+            this.shape.gotoAndPlay("thrusterLeft");
+          } else {
+            this.shape.gotoAndPlay("thruster");
+          }
         }
-      }
 
-      if (deets.u.b !== undefined && deets.u.b == true) { 
-        if (deets.u.l !== undefined && deets.u.l == true) {
-          this.shape.gotoAndPlay("reverseRight");
-        } else if (deets.u.r !== undefined && deets.u.r == true) {
-          this.shape.gotoAndPlay("reverseLeft");
-        } else {
-          this.shape.gotoAndPlay("reverse");
+        if (this.game.commands.down !== undefined && this.game.commands.down == true) { 
+          if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+            this.shape.gotoAndPlay("reverseRight");
+          } else if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+            this.shape.gotoAndPlay("reverseLeft");
+          } else {
+            this.shape.gotoAndPlay("reverse");
+          }
         }
-      }
 
-      if (deets.u.l !== undefined && deets.u.l == true) {
-        this.shape.gotoAndPlay("right");
-      }
+        if (this.game.commands.left !== undefined && this.game.commands.left == true) {
+          this.shape.gotoAndPlay("right");
+        }
 
-      if (deets.u.r !== undefined && deets.u.r == true) {
-        this.shape.gotoAndPlay("left");
+        if (this.game.commands.right !== undefined && this.game.commands.right == true) {
+          this.shape.gotoAndPlay("left");
+        }
       }
     } else {
-      this.shape.gotoAndPlay("death");
-      this.shape.opacity = 0.3;
+      this.shape.gotoAndStop("dead");
+      // this.shape.opacity = 0.3;
     }
   };
 
@@ -140,7 +143,6 @@ $(document).ready(function() {
     self.shots = {};
     self.loader = new createjs.LoadQueue();
     self.state = false;
-    self.state_set_first = true;
     self.commands = {};
     self.diffx = self.diffy = 0;
 
@@ -151,12 +153,7 @@ $(document).ready(function() {
       {id: "enemygopher", src: "enemygopher.png"},
       {id: "space", src: "background.jpg"},
       {id: "shot", src: "shot.png"},
-      {id: "ambience", src: "ambience.mp3"},
-      {id: "laser", src: "gama-laser.wav"},
-      {id: "rocket", src: "rocket.wav"},
-      {id: "points", src: "points.wav"},
-      {id: "explosion", src: "explosion.ogg"},
-      {id: "spawn", src: "spawn.ogg"}
+      {id: "ambience", src:"ambience.mp3"}
     ];
 
     self.loader.loadManifest(manifest, true, "/static/");
@@ -192,10 +189,6 @@ $(document).ready(function() {
         self.shots[shotState.i] = shot;
 
         self.stage.addChild(shot.shape);
-
-        if (shotState.g == self.usergopherid) {
-          createjs.Sound.play("laser");
-        }
       }
     });
 
@@ -204,10 +197,6 @@ $(document).ready(function() {
 
       if (gopherState.i == self.usergopherid) {
         if (self.usergopher) {
-          if (self.usergopher.points != gopherState.t) {
-            createjs.Sound.play("points");
-          }
-
           self.usergopher.update(gopherState);
         } else {
           self.usergopher = new Gopher(self, gopherState, true);
@@ -226,10 +215,6 @@ $(document).ready(function() {
         self.enemygophers[gopherState.i] = gopher;
 
         self.stage.addChild(gopher.shape);
-
-        if (!self.state_set_first) {
-          createjs.Sound.play("spawn");
-        }
       }
     });
 
@@ -276,8 +261,6 @@ $(document).ready(function() {
 
     self.space.x = -1 * (posx % self.space.tileW) - self.space.tileW;
     self.space.y = -1 * (posy % self.space.tileH) - self.space.tileH;
-
-    self.state_set_first = false;
   };
 
   Game.prototype.resize = function(self) {

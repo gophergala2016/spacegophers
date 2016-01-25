@@ -10,7 +10,7 @@ import (
 
 const (
 	// DefaultUpdateFPS describes the update rate for the game state.
-	DefaultUpdateFPS = 40.0
+	DefaultUpdateFPS = 30.0
 
 	// DefaultGopherSize is the size in px for the width and height of the gopher.
 	DefaultGopherSize = 50

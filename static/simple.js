@@ -139,6 +139,7 @@ $(document).ready(function() {
     self.shots = {};
     self.loader = new createjs.LoadQueue();
     self.state = false;
+    self.state_set_first = true;
     self.commands = {};
     self.diffx = self.diffy = 0;
 
@@ -149,7 +150,12 @@ $(document).ready(function() {
       {id: "enemygopher", src: "enemygopher.png"},
       {id: "space", src: "background.jpg"},
       {id: "shot", src: "shot.png"},
-      {id: "ambience", src:"ambience.mp3"}
+      {id: "ambience", src: "ambience.mp3"},
+      {id: "laser", src: "gama-laser.wav"},
+      {id: "rocket", src: "rocket.wav"},
+      {id: "points", src: "points.wav"},
+      {id: "explosion", src: "explosion.ogg"},
+      {id: "spawn", src: "spawn.ogg"}
     ];
 
     self.loader.loadManifest(manifest, true, "/static/");
@@ -185,6 +191,10 @@ $(document).ready(function() {
         self.shots[shotState.i] = shot;
 
         self.stage.addChild(shot.shape);
+
+        if (shotState.g == self.usergopherid) {
+          createjs.Sound.play("laser");
+        }
       }
     });
 
@@ -193,6 +203,10 @@ $(document).ready(function() {
 
       if (gopherState.i == self.usergopherid) {
         if (self.usergopher) {
+          if (self.usergopher.points != gopherState.t) {
+            createjs.Sound.play("points");
+          }
+
           self.usergopher.update(gopherState);
         } else {
           self.usergopher = new Gopher(self, gopherState, true);
@@ -211,6 +225,10 @@ $(document).ready(function() {
         self.enemygophers[gopherState.i] = gopher;
 
         self.stage.addChild(gopher.shape);
+
+        if (!self.state_set_first) {
+          createjs.Sound.play("spawn");
+        }
       }
     });
 
@@ -257,6 +275,8 @@ $(document).ready(function() {
 
     self.space.x = -1 * (posx % self.space.tileW) - self.space.tileW;
     self.space.y = -1 * (posy % self.space.tileH) - self.space.tileH;
+
+    self.state_set_first = false;
   };
 
   Game.prototype.resize = function(self) {

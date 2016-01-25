@@ -10,7 +10,7 @@ const (
 	halfTimestep = timestep / 2.0
 
 	// thrustAcceleration is a unit of px/s^2
-	thrustAcceleration = 0.005
+	thrustAcceleration = 0.001
 	thrustStep         = timestep * thrustAcceleration
 	angleThrust        = 0.03
 	angleStep          = timestep * angleThrust

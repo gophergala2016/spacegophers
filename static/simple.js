@@ -155,7 +155,9 @@ $(document).ready(function() {
       {id: "enemygopher", src: "enemygopher.png"},
       {id: "space", src: "background.jpg"},
       {id: "shot", src: "shot.png"},
-      {id: "ambience", src:"ambience.mp3"}
+      {id: "ambience", src:"ambience.mp3"},
+      {id: "explosion", src: "explosion.ogg"},
+      {id: "laser", src: "gama-laser.wav"}
     ];
 
     self.loader.loadManifest(manifest, true, "/static/");
@@ -191,6 +193,10 @@ $(document).ready(function() {
         self.shots[shotState.i] = shot;
 
         self.stage.addChild(shot.shape);
+
+        if (shotState.g == self.usergopherid) {
+          createjs.Sound.play("laser");
+        }
       }
     });
 

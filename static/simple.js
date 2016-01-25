@@ -145,6 +145,7 @@ $(document).ready(function() {
     self.shots = {};
     self.loader = new createjs.LoadQueue();
     self.state = false;
+    self.new_state = true;
     self.commands = {};
     self.diffx = self.diffy = 0;
 
@@ -157,6 +158,7 @@ $(document).ready(function() {
       {id: "shot", src: "shot.png"},
       {id: "ambience", src:"ambience.mp3"},
       {id: "explosion", src: "explosion.ogg"},
+      {id: "spawn", src: "spawn.ogg"},
       {id: "laser", src: "gama-laser.wav"}
     ];
 
@@ -223,6 +225,10 @@ $(document).ready(function() {
         self.enemygophers[gopherState.i] = gopher;
 
         self.stage.addChild(gopher.shape);
+
+        if (!self.new_state) {
+          createjs.Sound.play("spawn");
+        }
       }
     });
 
@@ -269,6 +275,8 @@ $(document).ready(function() {
 
     self.space.x = -1 * (posx % self.space.tileW) - self.space.tileW;
     self.space.y = -1 * (posy % self.space.tileH) - self.space.tileH;
+
+    self.new_state = false;
   };
 
   Game.prototype.resize = function(self) {
